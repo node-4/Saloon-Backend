@@ -1,0 +1,24 @@
+const staticContent = require('../controllers/static.Controller');
+const { authJwt, authorizeRoles } = require("../middlewares");
+module.exports = (app) => {
+    app.post('/createAboutus', [authJwt.verifyToken], staticContent.createAboutUs);
+    app.put('/aboutUs/:id', [authJwt.verifyToken], staticContent.updateAboutUs);
+    app.delete('/aboutUs/:id', [authJwt.verifyToken], staticContent.deleteAboutUs);
+    app.get('/getAboutUs', staticContent.getAboutUs);
+    app.get('/aboutUs/:id', staticContent.getAboutUsById);
+    app.post('/createPrivacy', [authJwt.verifyToken], staticContent.createPrivacy);
+    app.put('/privacy/:id', [authJwt.verifyToken], staticContent.updatePrivacy);
+    app.delete('/privacy/:id', [authJwt.verifyToken], staticContent.deletePrivacy);
+    app.get('/getPrivacy', staticContent.getPrivacy);
+    app.get('/privacy/:id', staticContent.getPrivacybyId);
+    app.post('/createTerms', [authJwt.verifyToken], staticContent.createTerms);
+    app.put('/terms/:id', [authJwt.verifyToken], staticContent.updateTerms);
+    app.delete('/terms/:id', [authJwt.verifyToken], staticContent.deleteTerms);
+    app.get('/getTerms', staticContent.getTerms);
+    app.get('/terms/:id', staticContent.getTermsbyId);
+    app.post("/faq/createFaq", [authJwt.verifyToken], staticContent.createFaq);
+    app.put("/faq/:id", [authJwt.verifyToken], staticContent.updateFaq);
+    app.delete("/faq/:id", [authJwt.verifyToken], staticContent.deleteFaq);
+    app.get("/faq/All", staticContent.getAllFaqs);
+    app.get("/faq/:id", staticContent.getFaqById);
+};

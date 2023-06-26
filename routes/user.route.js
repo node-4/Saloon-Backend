@@ -1,0 +1,24 @@
+const { validateUser } = require("../middlewares");
+const auth = require("../controllers/user.controller");
+const { authJwt, authorizeRoles } = require("../middlewares");
+var multer = require("multer");
+const path = require("path");
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => { cb(null, "uploads"); }, filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); },
+});
+const upload = multer({ storage: storage });
+const express = require("express");
+const router = express()
+router.post("/registration", auth.registration);
+router.post("/loginWithPhone", auth.loginWithPhone);
+router.post("/:id", auth.verifyOtp);
+router.post("/resendOtp/:id", auth.resendOTP);
+router.get("/getProfile", [authJwt.verifyToken], auth.getProfile);
+router.put("/updateLocation", [authJwt.verifyToken], auth.updateLocation);
+router.get("/Category/allCategory", auth.getCategories);
+router.get("/viewContactDetails", auth.viewContactDetails);
+router.get("/listStore", [authJwt.verifyToken], auth.listStore);
+router.get("/listService/:storeId", [authJwt.verifyToken], auth.listService);
+router.get("/getCart", [authJwt.verifyToken], auth.getCart);
+router.post("/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
+module.exports = router;
