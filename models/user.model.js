@@ -6,6 +6,10 @@ var userSchema = new schema(
             type: mongoose.Schema.ObjectId,
             ref: 'staffCategory'
         },
+        categoryId: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Category'
+        },
         vendorId: {
             type: schema.Types.ObjectId,
             ref: "user"

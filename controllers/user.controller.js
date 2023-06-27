@@ -8,7 +8,7 @@ const ContactDetail = require("../models/ContactDetail");
 const service = require('../models/service')
 const storeModel = require('../models/store');
 const Cart = require('../models/cartModel');
-const { log } = require("console");
+const transactionModel = require('../models/transactionModel');
 
 exports.registration = async (req, res) => {
         try {
@@ -198,11 +198,57 @@ exports.addToCart = async (req, res) => {
                 } else {
                         let findCart = await Cart.findOne({ userId: userData._id });
                         if (findCart) {
-                                let findService = await service.findById({ _id: req.body._id });
-                                if (findService) {
-
+                                if (findCart.services.length == 0) {
+                                        let total = findService.price * req.body.quantity;
+                                        let obj = {
+                                                serviceId: findService._id,
+                                                price: findService.price,
+                                                quantity: req.body.quantity,
+                                                total: total,
+                                        }
+                                        let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $push: { services: obj }, $set: { totalAmount: findCart.totalAmount + total, totalItem: findCart.totalItem + 1 } }, { new: true });
+                                        if (update) {
+                                                return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update })
+                                        }
                                 } else {
-                                        return res.status(404).send({ status: 404, message: "Service not found" });
+                                        for (let i = 0; i < findCart.services.length; i++) {
+                                                console.log(findCart.services);
+                                                let findService = await service.findById({ _id: req.body._id });
+                                                if (findService) {
+                                                        if (((findCart.services[i].serviceId).toString() == findService._id) == true) {
+                                                                console.log("-----------------------------5555-");
+                                                                let obj = {
+                                                                        serviceId: findService._id,
+                                                                        price: findService.price,
+                                                                        quantity: req.body.quantity,
+                                                                        total: findService.price * req.body.quantity,
+                                                                }
+                                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id, 'services.serviceId': req.body._id }, { $set: { services: obj } }, { new: true });
+                                                                if (update) {
+                                                                        let totals = 0;
+                                                                        for (let j = 0; j < update.services.length; j++) {
+                                                                                totals = totals + update.services[j].total
+                                                                        }
+                                                                        let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { totalAmount: totals, totalItem: update.services.length } }, { new: true });
+                                                                        return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
+                                                                }
+                                                        } else {
+                                                                let total = findService.price * req.body.quantity;
+                                                                let obj = {
+                                                                        serviceId: findService._id,
+                                                                        price: findService.price,
+                                                                        quantity: req.body.quantity,
+                                                                        total: total,
+                                                                }
+                                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $push: { services: obj }, $set: { totalAmount: findCart.totalAmount + total, totalItem: findCart.totalItem + 1 } }, { new: true });
+                                                                if (update) {
+                                                                        return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update })
+                                                                }
+                                                        }
+                                                } else {
+                                                        return res.status(404).send({ status: 404, message: "Service not found" });
+                                                }
+                                        }
                                 }
                         } else {
                                 let findService = await service.findById({ _id: req.body._id });
@@ -248,5 +294,93 @@ exports.getCart = async (req, res) => {
         } catch (error) {
                 console.log(error);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.addMoney = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: wallet + parseInt(req.body.balance) } }, { new: true });
+                        if (update) {
+                                let obj = {
+                                        user: req.user.id,
+                                        date: Date.now(),
+                                        amount: req.body.balance,
+                                        type: "Credit",
+                                };
+                                const data1 = await transactionModel.create(obj);
+                                if (data1) {
+                                        res.status(200).json({ status: 200, message: "Money has been added.", data: update, });
+                                }
+
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.removeMoney = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet - parseInt(req.body.balance) } }, { new: true });
+                        if (update) {
+                                let obj = {
+                                        user: req.user.id,
+                                        date: Date.now(),
+                                        amount: req.body.balance,
+                                        type: "Debit",
+                                };
+                                const data1 = await transactionModel.create(obj);
+                                if (data1) {
+                                        res.status(200).json({ status: 200, message: "Money has been deducted.", data: update, });
+                                }
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getWallet = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        return res.status(200).json({ message: "get Profile", data: data.wallet });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.allTransactionUser = async (req, res) => {
+        try {
+                const data = await transactionModel.find({ user: req.user._id }).populate("user subscriptionId");
+                res.status(200).json({ data: data });
+        } catch (err) {
+                res.status(400).json({ message: err.message });
+        }
+};
+exports.allcreditTransactionUser = async (req, res) => {
+        try {
+                const data = await transactionModel.find({ user: req.user._id, type: "Credit" });
+                res.status(200).json({ data: data });
+        } catch (err) {
+                res.status(400).json({ message: err.message });
+        }
+};
+exports.allDebitTransactionUser = async (req, res) => {
+        try {
+                const data = await transactionModel.find({ user: req.user._id, type: "Debit" });
+                res.status(200).json({ data: data });
+        } catch (err) {
+                res.status(400).json({ message: err.message });
         }
 };

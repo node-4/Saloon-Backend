@@ -8,7 +8,8 @@ const ContactDetail = require("../models/ContactDetail");
 const subscription = require('../models/subscription');
 const transactionModel = require('../models/transactionModel');
 const storeModel = require('../models/store');
-const service = require('../models/service')
+const service = require('../models/service');
+const staffCategory = require('../models/staffCategory')
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
@@ -120,7 +121,7 @@ exports.updateProfile = async (req, res) => {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
                         let id = req.body.categoryId;
-                        const category = await Category.findById(id);
+                        const category = await StaffCategory.findById(id);
                         if (!category) {
                                 res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
                         }
@@ -450,6 +451,135 @@ exports.listService = async (req, res) => {
                                         return res.status(404).send({ status: 404, message: "Data not found" });
                                 } else {
                                         res.json({ status: 200, message: 'Store Data found successfully.', service: findService, store: findStore });
+                                }
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.createStaffCategory = async (req, res) => {
+        try {
+                let findCategory = await staffCategory.findOne({ name: req.body.name, vendorId: req.user.id });
+                if (findCategory) {
+                        res.status(409).json({ message: "Staff Category already exit.", status: 404, data: {} });
+                } else {
+                        const data = { name: req.body.name, vendorId: req.user.id };
+                        const category = await staffCategory.create(data);
+                        res.status(200).json({ message: "Staff Category add successfully.", status: 200, data: category });
+                }
+        } catch (error) {
+                res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        }
+};
+exports.getStaffCategories = async (req, res) => {
+        const categories = await staffCategory.find({ vendorId: req.user.id });
+        res.status(201).json({ message: "Staff Category Found", status: 200, data: categories, });
+};
+exports.updateStaffCategory = async (req, res) => {
+        const { id } = req.params;
+        const category = await staffCategory.findById(id);
+        if (!category) {
+                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+        }
+        category.vendorId = req.user.id || category.vendorId;
+        category.name = req.body.name;
+        let update = await category.save();
+        res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeStaffCategory = async (req, res) => {
+        const { id } = req.params;
+        const category = await staffCategory.findById(id);
+        if (!category) {
+                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+        } else {
+                await StaffCategory.findByIdAndDelete(category._id);
+                res.status(200).json({ message: "Staff Category Deleted Successfully !" });
+        }
+};
+exports.addStaff = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, userType: "VENDOR" });
+                if (data) {
+                        const { phone } = req.body;
+                        const user = await User.findOne({ phone: phone, userType: "STAFF" });
+                        if (!user) {
+                                const category = await staffCategory.findById({ _id: req.body.staffCategoryId });
+                                if (!category) {
+                                        res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                                }
+                                req.body.vendorId = data._id;
+                                req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                                req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                req.body.accountVerification = false;
+                                req.body.userType = "STAFF";
+                                const userCreate = await User.create(req.body);
+                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
+                                res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
+                        } else {
+                                return res.status(409).send({ status: 409, msg: "Already Exit" });
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                res.status(500).json({ message: "Server error" });
+        }
+};
+exports.getStaff = async (req, res) => {
+        try {
+                const staff = await User.find({ vendorId: req.user.id, userType: "STAFF" });
+                if (staff.length == 0) {
+                        return res.status(404).send({ status: 404, message: "Staff not found" });
+                } else {
+                        res.status(200).json({ message: "Staff Category Found", status: 200, data: staff, });
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.removeStaff = async (req, res) => {
+        try {
+                const { id } = req.params;
+                const staff = await User.findOne({ _id: id, vendorId: req.user.id, userType: "STAFF" });
+                if (!staff) {
+                        res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                } else {
+                        await User.findByIdAndDelete(staff._id);
+                        res.status(200).json({ message: "Staff Category Deleted Successfully !" });
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+
+};
+exports.updateStaff = async (req, res) => {
+        try {
+                const user = await User.findOne({ _id: req.user.id, });
+                if (!user) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        const staff = await User.findOne({ _id: req.params.id, vendorId: user._id, userType: "STAFF" });
+                        if (!staff) {
+                                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                        } else {
+                                const category = await staffCategory.findById({ _id: req.body.staffCategoryId });
+                                if (!category) {
+                                        res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                                }
+                                let obj = {
+                                        vendorId: staff.vendorId,
+                                        staffCategoryId: req.body.staffCategoryId || staff.staffCategoryId,
+                                        fullName: req.body.fullName || staff.fullName,
+                                        phone: req.body.phone || staff.phone,
+                                        email: req.body.email || staff.email,
+                                }
+                                let update = await User.findByIdAndUpdate({ _id: staff._id }, { $set: obj }, { new: true });
+                                if (update) {
+                                        res.status(200).send({ status: 200, message: "update successfully.", data: update });
                                 }
                         }
                 }

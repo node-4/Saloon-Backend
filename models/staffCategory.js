@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
-const categorySchema = new mongoose.Schema({
+const schema = mongoose.Schema;
+const categorySchema = schema({
+    vendorId: {
+        type: schema.Types.ObjectId,
+        ref: "user"
+    },
     name: {
         type: String
     },
