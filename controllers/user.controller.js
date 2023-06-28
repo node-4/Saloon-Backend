@@ -296,6 +296,36 @@ exports.getCart = async (req, res) => {
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+exports.addStafftoCart = async (req, res) => {
+        try {
+                let userData = await User.findOne({ _id: req.user.id });
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findCart = await Cart.findOne({ userId: userData._id });
+                        if (findCart) {
+                                if (findCart.services.length == 0) {
+                                        return res.status(404).send({ status: 404, message: "Your cart have no service found." });
+                                } else {
+                                        const staff = await User.findOne({ _id: req.body.staffId, vendorId: findCart.vendorId, userType: "STAFF" });
+                                        if (staff) {
+                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: req.body.date, time: req.body.time, staffId: staff._id } }, { new: true });
+                                                if (update) {
+                                                        return res.status(200).send({ status: 200, message: "Cart found successfully.", data: update });
+                                                }
+                                        } else {
+                                                return res.status(404).send({ status: 404, message: "Staff id not found" });
+                                        }
+                                }
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Your cart is not found." });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 exports.addMoney = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user.id, });
@@ -382,5 +412,18 @@ exports.allDebitTransactionUser = async (req, res) => {
                 res.status(200).json({ data: data });
         } catch (err) {
                 res.status(400).json({ message: err.message });
+        }
+};
+exports.getStaff = async (req, res) => {
+        try {
+                const staff = await User.find({ vendorId: req.params.vendorId, userType: "STAFF" }).select('_id fullName firstName lastName');
+                if (staff.length == 0) {
+                        return res.status(404).send({ status: 404, message: "Staff not found" });
+                } else {
+                        res.status(200).json({ message: "Staff Category Found", status: 200, data: staff, });
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };

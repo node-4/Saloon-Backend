@@ -9,6 +9,16 @@ const DocumentSchema = schema({
                 type: schema.Types.ObjectId,
                 ref: "user"
         },
+        staffId: {
+                type: schema.Types.ObjectId,
+                ref: "user"
+        }, 
+        Date: {
+                type: Date
+        },
+        time: {
+                type: String
+        },
         services: [{
                 serviceId: {
                         type: schema.Types.ObjectId,
