@@ -9,23 +9,42 @@ const service = require('../models/service')
 const storeModel = require('../models/store');
 const Cart = require('../models/cartModel');
 const transactionModel = require('../models/transactionModel');
+const Address = require("../models/AddressModel");
+const orderModel = require('../models/orderModel');
 
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
                 const user = await User.findOne({ phone: phone, userType: "USER" });
                 if (!user) {
-                        req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                        req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-                        req.body.accountVerification = false;
-                        req.body.userType = "USER";
-                        const userCreate = await User.create(req.body);
-                        let obj = {
-                                id: userCreate._id,
-                                otp: userCreate.otp,
-                                phone: userCreate.phone
+                        if (req.body.refferalCode == null || req.body.refferalCode == undefined) {
+                                req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                                req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                req.body.accountVerification = false;
+                                req.body.userType = "USER";
+                                req.body.refferalCode = await reffralCode();
+                                const userCreate = await User.create(req.body);
+                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
+                                res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
+                        } else {
+                                const findUser = await User.findOne({ refferalCode: req.body.refferalCode });
+                                if (findUser) {
+                                        req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                                        req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                        req.body.accountVerification = false;
+                                        req.body.userType = "USER";
+                                        req.body.refferalCode = await reffralCode();
+                                        req.body.refferUserId = findUser._id;
+                                        const userCreate = await User.create(req.body);
+                                        if (userCreate) {
+                                                let updateWallet = await User.findOneAndUpdate({ _id: findUser._id }, { $push: { joinUser: userCreate._id } }, { new: true });
+                                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
+                                                res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
+                                        }
+                                } else {
+                                        res.status(404).send({ status: 404, message: "Invalid refferal code", data: {} });
+                                }
                         }
-                        res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
                 } else {
                         return res.status(409).send({ status: 409, msg: "Already Exit" });
                 }
@@ -283,8 +302,7 @@ exports.getCart = async (req, res) => {
                 if (!userData) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
-                        let findCart = await Cart.findOne({ userId: userData._id }).populate("userId")
-                                .populate("services.serviceId")
+                        let findCart = await Cart.findOne({ userId: userData._id }).populate("userId").populate("services.serviceId")
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
@@ -427,3 +445,138 @@ exports.getStaff = async (req, res) => {
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.createAddress = async (req, res, next) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        req.body.user = data._id;
+                        const address = await Address.create(req.body);
+                        return res.status(200).json({ message: "Address create successfully.", data: address });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getallAddress = async (req, res, next) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const allAddress = await Address.find({ user: data._id });
+                        return res.status(200).json({ message: "Address data found.", data: allAddress });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.updateAddress = async (req, res, next) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const data1 = await Address.findById({ _id: req.params.id });
+                        if (data1) {
+                                const newAddressData = req.body;
+                                let update = await Address.findByIdAndUpdate(data1._id, newAddressData, { new: true, });
+                                return res.status(200).json({ status: 200, message: "Address update successfully.", data: update });
+                        } else {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.deleteAddress = async (req, res, next) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const data1 = await Address.findById({ _id: req.params.id });
+                        if (data1) {
+                                let update = await Address.findByIdAndDelete(data1._id);
+                                res.status(200).json({ status: 200, message: "Address Deleted Successfully", });
+                        } else {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAddressbyId = async (req, res, next) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const data1 = await Address.findById({ _id: req.params.id });
+                        if (data1) {
+                                return res.status(200).json({ status: 200, message: "Address found successfully.", data: data1 });
+                        } else {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.checkout = async (req, res) => {
+        try {
+                let userData = await User.findOne({ _id: req.user.id });
+                if (!userData) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        let findCart = await Cart.findOne({ userId: userData._id })
+                        if (!findCart) {
+                                return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+                        } else {
+                                let obj= {
+
+                                }
+                        }
+                }
+        } catch (error) {
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.placeOrder = async (req, res) => {
+        try {
+                let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });
+                if (findUserOrder) {
+                        if (req.body.paymentStatus == "paid") {
+                                let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", paymentStatus: "paid" } }, { new: true });
+                                res.status(200).json({ message: "Payment success.", status: 200, data: update });
+                        }
+                        if (req.body.paymentStatus == "failed") {
+                                res.status(201).json({ message: "Payment failed.", status: 201, orderId: orderId });
+                        }
+                } else {
+                        return res.status(404).json({ message: "No data found", data: {} });
+                }
+        } catch (error) {
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+
+
+
+
+const reffralCode = async () => {
+        var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let OTP = '';
+        for (let i = 0; i < 9; i++) {
+                OTP += digits[Math.floor(Math.random() * 36)];
+        }
+        return OTP;
+}

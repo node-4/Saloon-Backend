@@ -6,7 +6,7 @@ const User = require("../models/user.model");
 const Category = require("../models/CategoryModel");
 const ContactDetail = require("../models/ContactDetail");
 const subscription = require('../models/subscription');
-
+const banner = require('../models/banner')
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -169,5 +169,57 @@ exports.getSubscription = async (req, res) => {
         res.status(200).json({ status: 200, message: "Subscription detail successfully.", data: findSubscription });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+};
+
+exports.AddBanner = async (req, res) => {
+    try {
+        let fileUrl;
+        if (req.file) {
+            fileUrl = req.file ? req.file.path : "";
+        }
+        const data = { image: fileUrl, desc: req.body.desc }
+        const Data = await banner.create(data);
+        res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
+    } catch (err) {
+        console.log(err);
+        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.getBanner = async (req, res) => {
+    try {
+        const Banner = await banner.find();
+        if (Banner.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+    } catch (err) {
+        console.log(err);
+        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.getBannerById = async (req, res) => {
+    try {
+        const Banner = await banner.findById({ _id: req.params.id });
+        if (!Banner) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        res.status(200).json({ status: 200, message: "Data found successfully.", data: Banner })
+    } catch (err) {
+        console.log(err);
+        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.DeleteBanner = async (req, res) => {
+    try {
+        const Banner = await banner.findById({ _id: req.params.id });
+        if (!Banner) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        await banner.findByIdAndDelete({ _id: req.params.id });
+        res.status(200).json({ status: 200, message: "Banner delete successfully.", data: {} })
+    } catch (err) {
+        console.log(err);
+        res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };

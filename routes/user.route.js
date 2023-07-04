@@ -29,4 +29,9 @@ router.get("/allTransactionUser", [authJwt.verifyToken], auth.allTransactionUser
 router.get("/allcreditTransactionUser", [authJwt.verifyToken], auth.allcreditTransactionUser);
 router.get("/allDebitTransactionUser", [authJwt.verifyToken], auth.allDebitTransactionUser);
 router.get("/staff/:vendorId", [authJwt.verifyToken], auth.getStaff);
+router.post("/address/new", [authJwt.verifyToken], auth.createAddress);
+router.get("/getAddress", [authJwt.verifyToken], auth.getallAddress);
+router.put("/address/:id", [authJwt.verifyToken], auth.updateAddress)
+router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
+router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
 module.exports = router;

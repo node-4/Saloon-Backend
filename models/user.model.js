@@ -14,6 +14,9 @@ var userSchema = new schema(
             type: schema.Types.ObjectId,
             ref: "user"
         },
+        refferalCode: { type: String, },
+        refferUserId: { type: schema.Types.ObjectId, ref: "user" },
+        joinUser: [{ type: schema.Types.ObjectId, ref: "user" }],
         fullName: {
             type: String,
         },
