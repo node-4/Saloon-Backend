@@ -541,8 +541,22 @@ exports.checkout = async (req, res) => {
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
-                                let obj= {
-
+                                let orderId = await reffralCode()
+                                let obj = {
+                                        orderId: orderId,
+                                        userId: findCart.userId,
+                                        vendorId: findCart.vendorId,
+                                        staffId: findCart.staffId,
+                                        Date: findCart.Date,
+                                        time: findCart.time,
+                                        services: findCart.services,
+                                        totalAmount: findCart.totalAmount,
+                                        totalItem: findCart.totalItem,
+                                        address: req.body.address,
+                                }
+                                let SaveOrder = await orderModel.create(obj);
+                                if (SaveOrder) {
+                                        return res.status(200).json({ status: 200, message: "order create successfully.", data: {} });
                                 }
                         }
                 }
@@ -568,10 +582,6 @@ exports.placeOrder = async (req, res) => {
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
-
-
-
-
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let OTP = '';

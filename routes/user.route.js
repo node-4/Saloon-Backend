@@ -34,4 +34,6 @@ router.get("/getAddress", [authJwt.verifyToken], auth.getallAddress);
 router.put("/address/:id", [authJwt.verifyToken], auth.updateAddress)
 router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
 router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
+router.post("/Cart/checkout", [authJwt.verifyToken], auth.checkout);
+router.post("/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
 module.exports = router;
