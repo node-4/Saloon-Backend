@@ -171,7 +171,6 @@ exports.getSubscription = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
 exports.AddBanner = async (req, res) => {
     try {
         let fileUrl;

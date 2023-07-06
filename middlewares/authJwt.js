@@ -20,6 +20,7 @@ const verifyToken = (req, res, next) => {
                 message: "UnAuthorised !",
             });
         }
+        // console.log(decoded);
         const user = await User.findOne({ _id: decoded.id });
         const user1 = await User.findOne({ _id: decoded.id });
         if (!user && !user1) {
@@ -28,7 +29,7 @@ const verifyToken = (req, res, next) => {
             });
         }
         req.user = user || user1;
-        //console.log(user);
+        // console.log(user);
         next();
     });
 };

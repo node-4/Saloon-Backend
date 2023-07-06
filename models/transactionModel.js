@@ -5,6 +5,10 @@ const transactionSchema = mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: "user",
     },
+    orderId: {
+        type: mongoose.Schema.ObjectId,
+        ref: "order",
+    },
     subscriptionId: {
         type: mongoose.Schema.ObjectId,
         ref: "subscription",
@@ -15,6 +19,9 @@ const transactionSchema = mongoose.Schema({
     },
     amount: {
         type: Number,
+    },
+    month: {
+        type: String,
     },
     paymentMode: {
         type: String,

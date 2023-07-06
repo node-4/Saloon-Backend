@@ -5,6 +5,10 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "user"
         },
+        categoryId: {
+                type: mongoose.Schema.ObjectId,
+                ref: 'Category'
+        },
         storeName: {
                 type: String
         },

@@ -65,13 +65,18 @@ const DocumentSchema = schema({
         },
         orderStatus: {
                 type: String,
-                enum: ["unconfirmed", "confirmed"],
+                enum: ["unconfirmed", "confirmed","cancel"],
                 default: "unconfirmed",
+        },
+        serviceStatus: {
+                type: String,
+                enum: ["Pending", "Complete"],
+                default: "Pending",
         },
         paymentStatus: {
                 type: String,
-                enum: ["pending", "paid", "failed"],
-                default: "pending"
+                enum: ["Pending", "Paid", "Failed"],
+                default: "Pending"
         },
 }, { timestamps: true })
 module.exports = mongoose.model("order", DocumentSchema);

@@ -11,6 +11,7 @@ const Cart = require('../models/cartModel');
 const transactionModel = require('../models/transactionModel');
 const Address = require("../models/AddressModel");
 const orderModel = require('../models/orderModel');
+const helpandSupport = require('../models/helpAndSupport');
 
 exports.registration = async (req, res) => {
         try {
@@ -51,6 +52,38 @@ exports.registration = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: "Server error" });
+        }
+};
+exports.socialLogin = async (req, res) => {
+        try {
+                const { firstName, lastName, email, phone } = req.body;
+                console.log(req.body);
+                const user = await User.findOne({ $and: [{ $or: [{ email }, { phone }] }, { userType: "USER" }] });
+                if (user) {
+                        jwt.sign({ id: user._id }, authConfig.secret, (err, token) => {
+                                if (err) {
+                                        return res.status(401).send("Invalid Credentials");
+                                } else {
+                                        return res.status(200).json({ status: 200, msg: "Login successfully", userId: user._id, token: token, });
+                                }
+                        });
+                } else {
+                        let refferalCode = await reffralCode();
+                        const newUser = await User.create({ firstName, lastName, phone, email, refferalCode, userType: "USER" });
+                        if (newUser) {
+                                jwt.sign({ id: newUser._id }, authConfig.secret, (err, token) => {
+                                        if (err) {
+                                                return res.status(401).send("Invalid Credentials");
+                                        } else {
+                                                console.log(token);
+                                                return res.status(200).json({ status: 200, msg: "Login successfully", userId: newUser._id, token: token, });
+                                        }
+                                });
+                        }
+                }
+        } catch (err) {
+                console.error(err);
+                return createResponse(res, 500, "Internal server error");
         }
 };
 exports.loginWithPhone = async (req, res) => {
@@ -100,9 +133,35 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.updateProfile = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        let obj = {
+                                fullName: req.body.fullName || data.fullName,
+                                email: req.body.email || data.email,
+                                phone: req.body.phone || data.phone,
+                                gender: req.body.gender || data.gender,
+                                alternatePhone: req.body.alternatePhone || data.alternatePhone,
+                                dob: req.body.dob || data.dob,
+                                address1: req.body.address1 || data.address1,
+                                address2: req.body.address2 || data.address2,
+                        }
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: obj }, { new: true });
+                        if (update) {
+                                return res.status(200).json({ status: 200, message: "Update profile successfully.", data: update });
+                        }
                 } else {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 }
@@ -135,7 +194,7 @@ exports.resendOTP = async (req, res) => {
 };
 exports.updateLocation = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -172,11 +231,11 @@ exports.viewContactDetails = async (req, res) => {
 };
 exports.listStore = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
-                        let findStore = await storeModel.find({});
+                        let findStore = await storeModel.find({ categoryId: req.params.categoryId });
                         if (findStore.length == 0) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
@@ -190,7 +249,7 @@ exports.listStore = async (req, res) => {
 };
 exports.listService = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -211,7 +270,7 @@ exports.listService = async (req, res) => {
 };
 exports.addToCart = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user.id });
+                let userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -298,7 +357,7 @@ exports.addToCart = async (req, res) => {
 };
 exports.getCart = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user.id });
+                let userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
@@ -316,7 +375,7 @@ exports.getCart = async (req, res) => {
 };
 exports.addStafftoCart = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user.id });
+                let userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -346,13 +405,16 @@ exports.addStafftoCart = async (req, res) => {
 };
 exports.addMoney = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: wallet + parseInt(req.body.balance) } }, { new: true });
                         if (update) {
+                                const date = new Date();
+                                let month = date.getMonth() + 1
                                 let obj = {
-                                        user: req.user.id,
-                                        date: Date.now(),
+                                        user: req.user._id,
+                                        date: date,
+                                        month: month,
                                         amount: req.body.balance,
                                         type: "Credit",
                                 };
@@ -372,13 +434,16 @@ exports.addMoney = async (req, res) => {
 };
 exports.removeMoney = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet - parseInt(req.body.balance) } }, { new: true });
                         if (update) {
+                                const date = new Date();
+                                let month = date.getMonth() + 1
                                 let obj = {
-                                        user: req.user.id,
-                                        date: Date.now(),
+                                        user: req.user._id,
+                                        date: date,
+                                        month: month,
                                         amount: req.body.balance,
                                         type: "Debit",
                                 };
@@ -397,7 +462,7 @@ exports.removeMoney = async (req, res) => {
 };
 exports.getWallet = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         return res.status(200).json({ message: "get Profile", data: data.wallet });
                 } else {
@@ -410,8 +475,21 @@ exports.getWallet = async (req, res) => {
 };
 exports.allTransactionUser = async (req, res) => {
         try {
-                const data = await transactionModel.find({ user: req.user._id }).populate("user subscriptionId");
-                res.status(200).json({ data: data });
+                if (req.query.month != (null || undefined)) {
+                        const data = await transactionModel.find({ user: req.user._id, month: req.query.month }).populate("user subscriptionId orderId");
+                        if (data.length > 0) {
+                                res.status(200).json({ status: 200, data: data });
+                        } else {
+                                res.status(404).json({ status: 404, data: {} });
+                        }
+                } else {
+                        const data = await transactionModel.find({ user: req.user._id }).populate("user subscriptionId orderId");
+                        if (data.length > 0) {
+                                res.status(200).json({ status: 200, data: data });
+                        } else {
+                                res.status(404).json({ status: 404, data: {} });
+                        }
+                }
         } catch (err) {
                 res.status(400).json({ message: err.message });
         }
@@ -447,7 +525,7 @@ exports.getStaff = async (req, res) => {
 };
 exports.createAddress = async (req, res, next) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         req.body.user = data._id;
                         const address = await Address.create(req.body);
@@ -462,7 +540,7 @@ exports.createAddress = async (req, res, next) => {
 };
 exports.getallAddress = async (req, res, next) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const allAddress = await Address.find({ user: data._id });
                         return res.status(200).json({ message: "Address data found.", data: allAddress });
@@ -476,7 +554,7 @@ exports.getallAddress = async (req, res, next) => {
 };
 exports.updateAddress = async (req, res, next) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const data1 = await Address.findById({ _id: req.params.id });
                         if (data1) {
@@ -496,7 +574,7 @@ exports.updateAddress = async (req, res, next) => {
 };
 exports.deleteAddress = async (req, res, next) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const data1 = await Address.findById({ _id: req.params.id });
                         if (data1) {
@@ -515,7 +593,7 @@ exports.deleteAddress = async (req, res, next) => {
 };
 exports.getAddressbyId = async (req, res, next) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const data1 = await Address.findById({ _id: req.params.id });
                         if (data1) {
@@ -533,7 +611,7 @@ exports.getAddressbyId = async (req, res, next) => {
 };
 exports.checkout = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user.id });
+                let userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
@@ -556,11 +634,12 @@ exports.checkout = async (req, res) => {
                                 }
                                 let SaveOrder = await orderModel.create(obj);
                                 if (SaveOrder) {
-                                        return res.status(200).json({ status: 200, message: "order create successfully.", data: {} });
+                                        return res.status(200).json({ status: 200, message: "order create successfully.", data: SaveOrder });
                                 }
                         }
                 }
         } catch (error) {
+                console.log(error);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
@@ -579,6 +658,134 @@ exports.placeOrder = async (req, res) => {
                         return res.status(404).json({ message: "No data found", data: {} });
                 }
         } catch (error) {
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.reOrder = async (req, res) => {
+        try {
+                let userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });
+                        if (findUserOrder) {
+                                const staff = await User.findOne({ _id: req.body.staffId, vendorId: findUserOrder.vendorId, userType: "STAFF" });
+                                if (staff) {
+                                        let orderId = await reffralCode()
+                                        let obj = {
+                                                orderId: orderId,
+                                                userId: findUserOrder.userId,
+                                                vendorId: findUserOrder.vendorId,
+                                                staffId: staff._id,
+                                                Date: req.body.date,
+                                                time: req.body.time,
+                                                services: findUserOrder.services,
+                                                totalAmount: findUserOrder.totalAmount,
+                                                totalItem: findUserOrder.totalItem,
+                                                address: req.body.address,
+                                        }
+                                        let SaveOrder = await orderModel.create(obj);
+                                        if (SaveOrder) {
+                                                return res.status(200).json({ status: 200, message: "order create successfully.", data: SaveOrder });
+                                        }
+                                } else {
+                                        return res.status(404).send({ status: 404, message: "Staff id not found" });
+                                }
+                        }
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.cancelOrder = async (req, res) => {
+        try {
+                let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });
+                if (findUserOrder) {
+                        let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "cancel" } }, { new: true });
+                        res.status(200).json({ message: "Payment success.", status: 200, data: update })
+                } else {
+                        return res.status(404).json({ message: "No data found", data: {} });
+                }
+        } catch (error) {
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getOngoingOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Pending" });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getCompleteOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Complete" });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getOrder = async (req, res) => {
+        try {
+                const data = await orderModel.findById({ _id: req.params.id });
+                if (data) {
+                        return res.status(200).json({ message: "view order", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddQuery = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const data = {
+                                user: data._id,
+                                name: req.body.name,
+                                email: req.body.email,
+                                mobile: req.body.mobile,
+                                query: req.body.query
+                        }
+                        const Data = await helpandSupport.create(data);
+                        res.status(200).json({ status: 200, message: "Send successfully.", data: Data })
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllQuery = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user.id, });
+                if (data) {
+                        const Data = await helpandSupport.find({ user: req.user._id });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "Help and support data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };

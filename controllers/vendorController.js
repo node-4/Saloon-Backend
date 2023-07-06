@@ -282,6 +282,7 @@ exports.addStore = async (req, res) => {
                                         req.body.storeImage = req.file.filename
                                 }
                                 req.body.vendorId = vendorData._id;
+                                req.body.categoryId = vendorData.categoryId;
                                 let saveStore = await storeModel(req.body).save();
                                 if (saveStore) {
                                         res.json({ status: 200, message: 'Store add successfully.', data: saveStore });
