@@ -120,10 +120,10 @@ exports.verifyOtp = async (req, res) => {
                         expiresIn: authConfig.accessTokenTime,
                 });
                 let obj = {
-                        id: updated._id,
+                        userId: updated._id,
                         otp: updated.otp,
                         phone: updated.phone,
-                        accessToken: accessToken
+                        token: accessToken
                 }
                 res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (err) {
@@ -214,7 +214,10 @@ exports.updateLocation = async (req, res) => {
 };
 exports.getCategories = async (req, res) => {
         const categories = await Category.find({});
-        res.status(201).json({ success: true, categories, });
+        if (categories.length == 0) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        res.status(200).json({ status: 200, message: "All category found successfully.", data: categories })
 };
 exports.viewContactDetails = async (req, res) => {
         try {
@@ -407,7 +410,7 @@ exports.addMoney = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
-                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: wallet + parseInt(req.body.balance) } }, { new: true });
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet + parseInt(req.body.balance) } }, { new: true });
                         if (update) {
                                 const date = new Date();
                                 let month = date.getMonth() + 1
@@ -464,7 +467,7 @@ exports.getWallet = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
-                        return res.status(200).json({ message: "get Profile", data: data.wallet });
+                        return res.status(200).json({ message: "Wallet balance found.", data: data.wallet });
                 } else {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 }
@@ -478,16 +481,16 @@ exports.allTransactionUser = async (req, res) => {
                 if (req.query.month != (null || undefined)) {
                         const data = await transactionModel.find({ user: req.user._id, month: req.query.month }).populate("user subscriptionId orderId");
                         if (data.length > 0) {
-                                res.status(200).json({ status: 200, data: data });
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
                         } else {
-                                res.status(404).json({ status: 404, data: {} });
+                                res.status(404).json({ status: 404, message: "Data not found.", data: {} });
                         }
                 } else {
                         const data = await transactionModel.find({ user: req.user._id }).populate("user subscriptionId orderId");
                         if (data.length > 0) {
-                                res.status(200).json({ status: 200, data: data });
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
                         } else {
-                                res.status(404).json({ status: 404, data: {} });
+                                res.status(404).json({ status: 404, message: "Data not found.", data: {} });
                         }
                 }
         } catch (err) {
@@ -497,7 +500,11 @@ exports.allTransactionUser = async (req, res) => {
 exports.allcreditTransactionUser = async (req, res) => {
         try {
                 const data = await transactionModel.find({ user: req.user._id, type: "Credit" });
-                res.status(200).json({ data: data });
+                if (data.length > 0) {
+                        res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                } else {
+                        res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                }
         } catch (err) {
                 res.status(400).json({ message: err.message });
         }
@@ -505,7 +512,11 @@ exports.allcreditTransactionUser = async (req, res) => {
 exports.allDebitTransactionUser = async (req, res) => {
         try {
                 const data = await transactionModel.find({ user: req.user._id, type: "Debit" });
-                res.status(200).json({ data: data });
+                if (data.length > 0) {
+                        res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                } else {
+                        res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                }
         } catch (err) {
                 res.status(400).json({ message: err.message });
         }
