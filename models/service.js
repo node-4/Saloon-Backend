@@ -5,9 +5,9 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "user"
         },
-        storeId: {
+        serviceCategoryId: {
                 type: schema.Types.ObjectId,
-                ref: "store"
+                ref: "serviceCategory"
         },
         name: {
                 type: String

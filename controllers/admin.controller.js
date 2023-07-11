@@ -7,6 +7,8 @@ const Category = require("../models/CategoryModel");
 const ContactDetail = require("../models/ContactDetail");
 const subscription = require('../models/subscription');
 const banner = require('../models/banner')
+const serviceCategory = require('../models/serviceCategory')
+
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -78,7 +80,7 @@ exports.createCategory = async (req, res) => {
         if (findCategory) {
             res.status(409).json({ message: "category already exit.", status: 404, data: {} });
         } else {
-            const data = { name: req.body.name, image: req.body.image };
+            const data = { name: req.body.name };
             const category = await Category.create(data);
             res.status(200).json({ message: "category add successfully.", status: 200, data: category });
         }
@@ -97,7 +99,6 @@ exports.updateCategory = async (req, res) => {
     if (!category) {
         res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
     }
-    category.image = req.body.image || category.image;
     category.name = req.body.name;
     let update = await category.save();
     res.status(200).json({ message: "Updated Successfully", data: update });
@@ -112,6 +113,50 @@ exports.removeCategory = async (req, res) => {
         res.status(200).json({ message: "Category Deleted Successfully !" });
     }
 };
+exports.createServiceCategory = async (req, res) => {
+    try {
+        let findCategory = await serviceCategory.findOne({ name: req.body.name});
+        if (findCategory) {
+            res.status(409).json({ message: "Service Category already exit.", status: 404, data: {} });
+        } else {
+            const data = { name: req.body.name };
+            const category = await serviceCategory.create(data);
+            res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
+        }
+    } catch (error) {
+        res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getServiceCategory = async (req, res) => {
+    const categories = await serviceCategory.find({  });
+    res.status(201).json({ message: "Service Category Found", status: 200, data: categories, });
+};
+exports.updateServiceCategory = async (req, res) => {
+    const { id } = req.params;
+    const category = await serviceCategory.findById(id);
+    if (!category) {
+        res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
+    }
+    category.name = req.body.name;
+    let update = await category.save();
+    res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeServiceCategory = async (req, res) => {
+    const { id } = req.params;
+    const category = await serviceCategory.findById(id);
+    if (!category) {
+        res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
+    } else {
+        await serviceCategory.findByIdAndDelete(category._id);
+        res.status(200).json({ message: "Service Category Deleted Successfully !" });
+    }
+};
+
+
+
+
+
+
 exports.addContactDetails = async (req, res) => {
     try {
         let findContact = await ContactDetail.findOne();

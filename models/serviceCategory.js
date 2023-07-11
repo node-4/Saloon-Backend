@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const schema = mongoose.Schema;
 const categorySchema = schema({
-    vendorId: {
-        type: schema.Types.ObjectId,
-        ref: "user"
-    },
     name: {
         type: String
     },
@@ -16,4 +12,4 @@ const categorySchema = schema({
     },
 });
 
-module.exports = mongoose.model("staffCategory", categorySchema);
+module.exports = mongoose.model("serviceCategory", categorySchema);

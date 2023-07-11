@@ -5,9 +5,6 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: [true, "name Category Required"],
     },
-    image: {
-        type: String
-    },
     status: {
         type: String,
         enum: ["Active", "Block"],

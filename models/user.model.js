@@ -2,18 +2,10 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 var userSchema = new schema(
     {
-        staffCategoryId: {
-            type: mongoose.Schema.ObjectId,
-            ref: 'staffCategory'
-        },
-        categoryId: {
-            type: mongoose.Schema.ObjectId,
-            ref: 'Category'
-        },
-        vendorId: {
-            type: schema.Types.ObjectId,
-            ref: "user"
-        },
+        serviceCategoryId: [{ type: mongoose.Schema.ObjectId, ref: 'serviceCategory' }],
+        categoryId: { type: mongoose.Schema.ObjectId, ref: 'Category' },
+        vendorId: { type: schema.Types.ObjectId, ref: "user" },
+        subscriptionId: { type: mongoose.Schema.ObjectId, ref: "subscription", },
         refferalCode: { type: String, },
         refferUserId: { type: schema.Types.ObjectId, ref: "user" },
         joinUser: [{ type: schema.Types.ObjectId, ref: "user" }],
@@ -64,6 +56,9 @@ var userSchema = new schema(
             type: String,
         },
         otherDocument: {
+            type: String,
+        },
+        otherImage: {
             type: String,
         },
         documentVerification: {
@@ -126,6 +121,55 @@ var userSchema = new schema(
         },
         subscriptionExpire: {
             type: Date,
+        },
+        workcity: {
+            type: String
+        },
+        mainHub: {
+            type: String
+        },
+        secondaryHub: {
+            type: String
+        },
+        averageRating: {
+            type: Number,
+            default: 0
+        },
+        openClose: {
+            type: String,
+            enum: ["OPEN", "Close"],
+            default: "OPEN"
+        },
+        storeLocation: {
+            type: {
+                type: String,
+                default: "Point"
+            },
+            coordinates: {
+                type: [Number],
+                default: [0, 0]
+            },
+        },
+        Monday: {
+            type: String
+        },
+        Tuesday: {
+            type: String
+        },
+        Wednesday: {
+            type: String
+        },
+        Thursday: {
+            type: String
+        },
+        Friday: {
+            type: String
+        },
+        Saturday: {
+            type: String
+        },
+        Sunday: {
+            type: String
         },
         wallet: {
             type: Number,
