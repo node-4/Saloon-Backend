@@ -42,6 +42,8 @@ router.post("/Staff/addStaff", [authJwt.verifyToken], auth.addStaff);
 router.get("/Staff/getStaff", [authJwt.verifyToken], auth.getStaff);
 router.delete("/Staff/deleteStaff/:id", [authJwt.verifyToken], auth.removeStaff);
 router.put("/Staff/updateStaff/:id", [authJwt.verifyToken], auth.updateStaff);
+router.post("/Service/addService", [authJwt.verifyToken], auth.addService);
+router.get("/listService/:serviceCategoryId", [authJwt.verifyToken], auth.listService);
 
 
 
@@ -54,8 +56,6 @@ router.put("/Staff/updateStaff/:id", [authJwt.verifyToken], auth.updateStaff);
 // router.put("/Store/editStore", [authJwt.verifyToken], auth.editStore);
 // router.delete("/deleteStore/:id", [authJwt.verifyToken], auth.deleteStore);
 // router.put("/updateStoreLocation/:id", [authJwt.verifyToken], auth.updateStoreLocation);
-// router.post("/Service/addService", [authJwt.verifyToken], auth.addService);
-// router.get("/listService/:storeId", [authJwt.verifyToken], auth.listService);
 // router.post('/wallet/addWallet', [authJwt.verifyToken], user.addMoney);
 // router.post('/wallet/removeWallet', [authJwt.verifyToken], user.removeMoney);
 // router.get('/wallet/getwallet', [authJwt.verifyToken], user.getWallet);

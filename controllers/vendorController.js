@@ -506,7 +506,51 @@ exports.updateStaff = async (req, res) => {
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
+exports.addService = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user.id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findStore = await serviceCategory.findOne({ _id: req.body.serviceCategoryId });
+                        if (!findStore) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                req.body.vendorId = vendorData._id;
+                                let saveStore = await service(req.body).save();
+                                if (saveStore) {
+                                        res.json({ status: 200, message: 'Service add successfully.', data: saveStore });
+                                }
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.listService = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user.id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findStore = await serviceCategory.findOne({ _id: req.params.serviceCategoryId });
+                        if (!findStore) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                let findService = await service.find({ serviceCategoryId: findStore._id }).populate('serviceCategoryId vendorId');
+                                if (findService.length == 0) {
+                                        return res.status(404).send({ status: 404, message: "Data not found" });
+                                } else {
+                                        res.json({ status: 200, message: 'Service Data found successfully.', service: findService, store: findStore });
+                                }
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 
 
 
@@ -682,51 +726,4 @@ exports.updateStaff = async (req, res) => {
 //                 res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
-// exports.addService = async (req, res) => {
-//         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id });
-//                 if (!vendorData) {
-//                         return res.status(404).send({ status: 404, message: "User not found" });
-//                 } else {
-//                         let findStore = await storeModel.findOne({ _id: req.body.storeId, vendorId: vendorData._id });
-//                         if (!findStore) {
-//                                 return res.status(404).send({ status: 404, message: "Data not found" });
-//                         } else {
-//                                 let findService = await service.findOne({ name: req.body.name, storeId: findStore._id, vendorId: vendorData._id });
-//                                 if (findService) {
-//                                         return res.status(409).send({ status: 409, message: "Already exit." });
-//                                 } else {
-//                                         req.body.vendorId = vendorData._id;
-//                                         let saveStore = await service(req.body).save();
-//                                         if (saveStore) {
-//                                                 res.json({ status: 200, message: 'Service add successfully.', data: saveStore });
-//                                         }
-//                                 }
-//                         }
-//                 }
-//         } catch (error) {
-//                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
-//         }
-// };
-// exports.listService = async (req, res) => {
-//         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id });
-//                 if (!vendorData) {
-//                         return res.status(404).send({ status: 404, message: "User not found" });
-//                 } else {
-//                         let findStore = await storeModel.findOne({ _id: req.params.storeId });
-//                         if (findStore) {
-//                                 let findService = await service.find({ storeId: findStore._id });
-//                                 if (findService.length == 0) {
-//                                         return res.status(404).send({ status: 404, message: "Data not found" });
-//                                 } else {
-//                                         res.json({ status: 200, message: 'Store Data found successfully.', service: findService, store: findStore });
-//                                 }
-//                         }
-//                 }
-//         } catch (error) {
-//                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
-//         }
-// };
+//
