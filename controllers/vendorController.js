@@ -11,6 +11,8 @@ const storeModel = require('../models/store');
 const service = require('../models/service');
 const serviceCategory = require('../models/serviceCategory')
 const Coupan = require('../models/Coupan')
+const rating = require('../models/ratingModel');
+const orderModel = require('../models/orderModel');
 
 exports.registration = async (req, res) => {
         try {
@@ -64,7 +66,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.updateProfile = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -91,7 +93,7 @@ exports.updateProfile = async (req, res) => {
 };
 exports.updateDocument = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -142,7 +144,7 @@ exports.getSubscription = async (req, res) => {
 };
 exports.takeSubscription = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -179,7 +181,7 @@ exports.takeSubscription = async (req, res) => {
                                         }
                                 }
                         } else {
-                                return res.status(404).send({ status: 404, message: "User not found" });
+                                return res.status(404).send({ status: 404, message: "Subscription not found" });
                         }
                 }
         } catch (error) {
@@ -189,7 +191,7 @@ exports.takeSubscription = async (req, res) => {
 };
 exports.verifySubscription = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -216,7 +218,7 @@ exports.verifySubscription = async (req, res) => {
                                         }
                                 }
                                 if (req.body.Status == "failed") {
-                                        let update = await transactionModel.findByIdAndUpdate({ _id: findTransaction._id }, { $Set: { Status: "failed" } }, { new: true });
+                                        let update = await transactionModel.findByIdAndUpdate({ _id: findTransaction._id }, { $set: { Status: "failed" } }, { new: true });
                                         if (update) {
                                                 res.json({ status: 200, message: 'subscription not subscribe successfully.', data: update });
                                         }
@@ -273,7 +275,7 @@ exports.resendOTP = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
@@ -381,7 +383,7 @@ exports.signin = async (req, res) => {
 };
 exports.updateWorkdetails = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -439,7 +441,7 @@ exports.addStaff = async (req, res) => {
 };
 exports.getStaff = async (req, res) => {
         try {
-                const staff = await User.find({ vendorId: req.user.id, userType: "STAFF" });
+                const staff = await User.find({ vendorId: req.user._id, userType: "STAFF" });
                 if (staff.length == 0) {
                         return res.status(404).send({ status: 404, message: "Staff not found" });
                 } else {
@@ -453,7 +455,7 @@ exports.getStaff = async (req, res) => {
 exports.removeStaff = async (req, res) => {
         try {
                 const { id } = req.params;
-                const staff = await User.findOne({ _id: id, vendorId: req.user.id, userType: "STAFF" });
+                const staff = await User.findOne({ _id: id, vendorId: req.user._id, userType: "STAFF" });
                 if (!staff) {
                         res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
                 } else {
@@ -468,7 +470,7 @@ exports.removeStaff = async (req, res) => {
 };
 exports.updateStaff = async (req, res) => {
         try {
-                const user = await User.findOne({ _id: req.user.id, });
+                const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -509,7 +511,7 @@ exports.updateStaff = async (req, res) => {
 };
 exports.addService = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -531,7 +533,7 @@ exports.addService = async (req, res) => {
 };
 exports.listService = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -554,7 +556,7 @@ exports.listService = async (req, res) => {
 };
 exports.addCoupan = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -581,7 +583,7 @@ exports.addCoupan = async (req, res) => {
 };
 exports.listCoupan = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user.id });
+                let vendorData = await User.findOne({ _id: req.user._id });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
@@ -597,7 +599,51 @@ exports.listCoupan = async (req, res) => {
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.listRating = async (req, res) => {
+        try {
+                console.log(req.user._id);
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findRating = await rating.find({ userId: vendorData._id }).populate({ path: 'rating.userId' });
+                        if (findRating.length == 0) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                res.json({ status: 200, message: 'Coupan Data found successfully.', service: findRating });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 
+exports.reportRating = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let month = new Date(Date.now()).getMonth() + 1;
+                        let lastMonth = new Date(Date.now()).getMonth();
+                        let findRating = await rating.findOne({ userId: vendorData._id, month: month })
+                        let findLastRating = await rating.findOne({ userId: vendorData._id, month: lastMonth })
+                        let obj = {
+                                overAllrating: overAllrating,
+                                thisMonth: findRating.averageRating,
+                                lastMonth: findLastRating.averageRating,
+                                last50Job: last50Job,
+                                jobTillDate: jobTillDate,
+                                noOfDays: noOfDays
+                        }
+                        res.json({ status: 200, message: 'Data found successfully.', data: obj });
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
         let OTP = '';
@@ -636,7 +682,7 @@ const reffralCode = async () => {
 
 // exports.addStore = async (req, res) => {
 //         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id });
+//                 let vendorData = await User.findOne({ _id: req.user._id });
 //                 if (!vendorData) {
 //                         return res.status(404).send({ status: 404, message: "User not found" });
 //                 } else {
@@ -675,7 +721,7 @@ const reffralCode = async () => {
 // };
 // exports.editStore = async (req, res) => {
 //         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id, userType: "VENDOR" });
+//                 let vendorData = await User.findOne({ _id: req.user._id, userType: "VENDOR" });
 //                 if (!vendorData) {
 //                         return res.status(404).send({ status: 404, message: "User not found" });
 //                 } else {
@@ -700,7 +746,7 @@ const reffralCode = async () => {
 // };
 // exports.deleteStore = async (req, res) => {
 //         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id, userType: "VENDOR" });
+//                 let vendorData = await User.findOne({ _id: req.user._id, userType: "VENDOR" });
 //                 if (!vendorData) {
 //                         return res.status(404).send({ status: 404, message: "User not found" });
 //                 } else {
@@ -721,7 +767,7 @@ const reffralCode = async () => {
 // };
 // exports.listStore = async (req, res) => {
 //         try {
-//                 let vendorData = await User.findOne({ _id: req.user.id, userType: "VENDOR" });
+//                 let vendorData = await User.findOne({ _id: req.user._id, userType: "VENDOR" });
 //                 if (!vendorData) {
 //                         return res.status(404).send({ status: 404, message: "User not found" });
 //                 } else {

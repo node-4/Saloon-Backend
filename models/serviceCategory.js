@@ -10,6 +10,6 @@ const categorySchema = schema({
         enum: ["Active", "Block"],
         default: "Active"
     },
-});
+},{ timestamps: true });
 
 module.exports = mongoose.model("serviceCategory", categorySchema);

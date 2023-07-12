@@ -26,13 +26,13 @@ const transactionSchema = mongoose.Schema({
     paymentMode: {
         type: String,
     },
-    type:{
+    type: {
         type: String,
     },
     Status: {
         type: String,
     },
-});
+}, { timestamps: true });
 
 const transaction = mongoose.model("transaction", transactionSchema);
 module.exports = transaction;

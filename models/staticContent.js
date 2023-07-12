@@ -16,5 +16,5 @@ const staticContent = mongoose.Schema({
         type: String,
         enum: ["ABOUTUS", "TERMS", "PRIVACY"],
     },
-})
+},{ timestamps: true })
 module.exports = mongoose.model('staticContent', staticContent);

@@ -46,6 +46,7 @@ router.post("/Service/addService", [authJwt.verifyToken], auth.addService);
 router.get("/listService/:serviceCategoryId", [authJwt.verifyToken], auth.listService);
 router.post("/Coupan/addCoupan", [authJwt.verifyToken], auth.addCoupan);
 router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
+router.get("/rating/listRating", [authJwt.verifyToken], auth.listRating);
 
 
 

@@ -18,9 +18,11 @@ router.get("/getProfile", [authJwt.verifyToken], auth.getProfile);
 router.put("/updateProfile", [authJwt.verifyToken], auth.updateProfile);
 router.put("/updateLocation", [authJwt.verifyToken], auth.updateLocation);
 router.get("/Category/allCategory", auth.getCategories);
+router.get("/Category/getserviceCategory", auth.getserviceCategory);
+router.get("/Category/getVendorbyserviceCategory/:serviceCategoryId", auth.getVendorbyserviceCategory);
 router.get("/viewContactDetails", auth.viewContactDetails);
 router.get("/listStore/:categoryId", [authJwt.verifyToken], auth.listStore);
-router.get("/listService/:storeId", [authJwt.verifyToken], auth.listService);
+router.get("/listService/:serviceCategoryId/:vendorId", [authJwt.verifyToken], auth.listService);
 router.get("/getCart", [authJwt.verifyToken], auth.getCart);
 router.post("/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
 router.post("/Cart/addStafftoCart", [authJwt.verifyToken], auth.addStafftoCart);
@@ -48,4 +50,5 @@ router.get("/getAddress", [authJwt.verifyToken], auth.getallAddress);
 router.put("/address/:id", [authJwt.verifyToken], auth.updateAddress)
 router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
 router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
+router.post('/giveRating/:id', authJwt.verifyToken, auth.giveRating);
 module.exports = router;

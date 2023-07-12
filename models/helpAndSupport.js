@@ -16,6 +16,6 @@ const helpandSupport = mongoose.Schema({
     query: {
         type: String
     }
-})
+},{ timestamps: true })
 const help = mongoose.model('help&support', helpandSupport);
 module.exports = help

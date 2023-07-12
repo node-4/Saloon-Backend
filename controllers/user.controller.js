@@ -12,6 +12,8 @@ const transactionModel = require('../models/transactionModel');
 const Address = require("../models/AddressModel");
 const orderModel = require('../models/orderModel');
 const helpandSupport = require('../models/helpAndSupport');
+const serviceCategory = require('../models/serviceCategory')
+const rating = require('../models/ratingModel');
 
 exports.registration = async (req, res) => {
         try {
@@ -219,6 +221,20 @@ exports.getCategories = async (req, res) => {
         }
         res.status(200).json({ status: 200, message: "All category found successfully.", data: categories })
 };
+exports.getserviceCategory = async (req, res) => {
+        const categories = await serviceCategory.find({});
+        if (categories.length == 0) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        res.status(200).json({ status: 200, message: "All Service Category found successfully.", data: categories })
+};
+exports.getVendorbyserviceCategory = async (req, res) => {
+        const categories = await User.find({ serviceCategoryId: { $in: req.params.serviceCategoryId } });
+        if (categories.length == 0) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        res.status(200).json({ status: 200, message: "All vendor found successfully.", data: categories })
+};
 exports.viewContactDetails = async (req, res) => {
         try {
                 let findcontactDetails = await ContactDetail.findOne();
@@ -252,19 +268,17 @@ exports.listStore = async (req, res) => {
 };
 exports.listService = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.user._id });
+                let vendorData = await User.findOne({ _id: req.params.vendorId });
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
+                }
+                const staff = await User.find({ vendorId: req.params.vendorId, userType: "STAFF" }).select('_id fullName firstName lastName image');
+
+                let findService = await service.find({ serviceCategoryId: req.params.serviceCategoryId, vendorId: vendorData._id })
+                if (findService.length == 0) {
+                        return res.status(404).send({ status: 404, message: "Data not found" });
                 } else {
-                        let findStore = await storeModel.findOne({ _id: req.params.storeId });
-                        if (findStore) {
-                                let findService = await service.find({ storeId: findStore._id });
-                                if (findService.length == 0) {
-                                        return res.status(404).send({ status: 404, message: "Data not found" });
-                                } else {
-                                        res.json({ status: 200, message: 'Store Data found successfully.', service: findService, store: findStore });
-                                }
-                        }
+                        res.json({ status: 200, message: 'Store Data found successfully.', service: findService, vendorId: vendorData, staff: staff });
                 }
         } catch (error) {
                 console.error(error);
@@ -389,7 +403,9 @@ exports.addStafftoCart = async (req, res) => {
                                 } else {
                                         const staff = await User.findOne({ _id: req.body.staffId, vendorId: findCart.vendorId, userType: "STAFF" });
                                         if (staff) {
-                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: req.body.date, time: req.body.time, staffId: staff._id } }, { new: true });
+                                                const d = new Date(req.body.date);
+                                                let text = d.toISOString();
+                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: text, time: req.body.time, staffId: staff._id } }, { new: true });
                                                 if (update) {
                                                         return res.status(200).send({ status: 200, message: "Cart found successfully.", data: update });
                                                 }
@@ -763,7 +779,7 @@ exports.getOrder = async (req, res) => {
 };
 exports.AddQuery = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const data = {
                                 user: data._id,
@@ -784,7 +800,7 @@ exports.AddQuery = async (req, res) => {
 };
 exports.getAllQuery = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const Data = await helpandSupport.find({ user: req.user._id });
                         if (data.length == 0) {
@@ -798,6 +814,73 @@ exports.getAllQuery = async (req, res) => {
         } catch (err) {
                 console.log(err);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.giveRating = async (req, res) => {
+        try {
+                console.log(req.user._id);
+                let findUser = await User.findOne({ _id: req.user._id });
+                if (!findUser) {
+                        res.status(404).json({ message: "Token Expired or invalid.", status: 404 });
+                } else {
+                        let month = new Date(Date.now()).getMonth() + 1;
+                        let findUsers = await User.findOne({ _id: req.params.id });
+                        if (findUsers) {
+                                let findRating = await rating.findOne({ userId: findUsers._id, month: month })
+                                if (findRating) {
+                                        let obj = { userId: findUser._id, rating: req.body.rating, comment: req.body.comment, date: Date.now() };
+                                        let averageRating = (((findRating.averageRating * findRating.rating.length) + req.body.rating) / (findRating.rating.length + 1));
+                                        let update = await rating.findByIdAndUpdate({ _id: findRating._id }, { $set: { averageRating: parseFloat(averageRating).toFixed(2), totalRating: findRating.rating.length + 1 }, $push: { rating: obj } }, { new: true });
+                                        if (update) {
+                                                let findVendorRating = await rating.findOne({ userId: findUsers.vendorId, month: month })
+                                                if (findVendorRating) {
+                                                        let obj = { staffId: findUsers._id, userId: findUser._id, rating: req.body.rating, comment: req.body.comment, date: Date.now() };
+                                                        let averageRating = (((findVendorRating.averageRating * findVendorRating.rating.length) + req.body.rating) / (findVendorRating.rating.length + 1));
+                                                        let update = await rating.findByIdAndUpdate({ _id: findVendorRating._id }, { $set: { averageRating: parseFloat(averageRating).toFixed(2), totalRating: findVendorRating.rating.length + 1 }, $push: { rating: obj } }, { new: true });
+                                                        if (update) {
+                                                                return res.status(200).json({ status: 200, message: "Rating given successfully.", data: update });
+                                                        }
+                                                }
+                                        }
+                                } else {
+                                        let data = {
+                                                userId: findUsers._id,
+                                                rating: [{
+                                                        userId: findUser._id,
+                                                        rating: req.body.rating,
+                                                        comment: req.body.comment,
+                                                        date: Date.now(),
+                                                }],
+                                                month: month,
+                                                averageRating: req.body.rating,
+                                                totalRating: 1
+                                        }
+                                        const Data = await rating.create(data);
+                                        if (Data) {
+                                                let obj = {
+                                                        userId: findUsers.vendorId,
+                                                        rating: [{
+                                                                staffId: findUsers._id,
+                                                                userId: findUser._id,
+                                                                rating: req.body.rating,
+                                                                comment: req.body.comment,
+                                                                date: Date.now(),
+                                                        }],
+                                                        month: month,
+                                                        averageRating: req.body.rating,
+                                                        totalRating: 1
+                                                }
+                                                const objs = await rating.create(obj);
+                                                return res.status(200).json({ status: 200, message: "Rating given successfully.", data: Data });
+                                        }
+                                }
+                        } else {
+                                res.status(404).json({ message: "User Not found.", status: 404 });
+                        }
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ message: "server error.", data: {}, });
         }
 };
 const reffralCode = async () => {

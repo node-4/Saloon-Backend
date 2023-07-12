@@ -22,5 +22,5 @@ const addressSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: "user",
   },
-});
+}, { timestamps: true });
 module.exports = mongoose.model("Address", addressSchema);
