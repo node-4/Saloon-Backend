@@ -10,6 +10,7 @@ const transactionModel = require('../models/transactionModel');
 const storeModel = require('../models/store');
 const service = require('../models/service');
 const serviceCategory = require('../models/serviceCategory')
+const Coupan = require('../models/Coupan')
 
 exports.registration = async (req, res) => {
         try {
@@ -551,9 +552,60 @@ exports.listService = async (req, res) => {
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.addCoupan = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user.id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findStore = await service.findOne({ _id: req.body.serviceId });
+                        if (!findStore) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                const d = new Date(req.body.expirationDate);
+                                req.body.expirationDate = d.toISOString();
+                                const de = new Date(req.body.activationDate);
+                                req.body.activationDate = de.toISOString();
+                                req.body.vendorId = vendorData._id;
+                                req.body.couponCode = await reffralCode();
+                                let saveStore = await Coupan(req.body).save();
+                                if (saveStore) {
+                                        res.json({ status: 200, message: 'Coupan add successfully.', data: saveStore });
+                                }
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.listCoupan = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user.id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await Coupan.find({ vendorId: vendorData._id });
+                        if (findService.length == 0) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                res.json({ status: 200, message: 'Coupan Data found successfully.', service: findService });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 
-
-
+const reffralCode = async () => {
+        var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let OTP = '';
+        for (let i = 0; i < 6; i++) {
+                OTP += digits[Math.floor(Math.random() * 36)];
+        }
+        return OTP;
+}
 
 
 

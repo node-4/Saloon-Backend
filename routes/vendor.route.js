@@ -44,7 +44,8 @@ router.delete("/Staff/deleteStaff/:id", [authJwt.verifyToken], auth.removeStaff)
 router.put("/Staff/updateStaff/:id", [authJwt.verifyToken], auth.updateStaff);
 router.post("/Service/addService", [authJwt.verifyToken], auth.addService);
 router.get("/listService/:serviceCategoryId", [authJwt.verifyToken], auth.listService);
-
+router.post("/Coupan/addCoupan", [authJwt.verifyToken], auth.addCoupan);
+router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
 
 
 
