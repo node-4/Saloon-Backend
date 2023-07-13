@@ -50,5 +50,5 @@ router.get("/getAddress", [authJwt.verifyToken], auth.getallAddress);
 router.put("/address/:id", [authJwt.verifyToken], auth.updateAddress)
 router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
 router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
-router.post('/giveRating/:id', authJwt.verifyToken, auth.giveRating);
+router.post('/giveRating/:id/:orderId', authJwt.verifyToken, auth.giveRating);
 module.exports = router;

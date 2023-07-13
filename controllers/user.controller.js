@@ -14,7 +14,7 @@ const orderModel = require('../models/orderModel');
 const helpandSupport = require('../models/helpAndSupport');
 const serviceCategory = require('../models/serviceCategory')
 const rating = require('../models/ratingModel');
-
+const orderRatingModel = require('../models/orderRatingModel');
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
@@ -458,14 +458,28 @@ exports.removeMoney = async (req, res) => {
                         let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet - parseInt(req.body.balance) } }, { new: true });
                         if (update) {
                                 const date = new Date();
-                                let month = date.getMonth() + 1
-                                let obj = {
-                                        user: req.user._id,
-                                        date: date,
-                                        month: month,
-                                        amount: req.body.balance,
-                                        type: "Debit",
-                                };
+                                let month = date.getMonth() + 1;
+                                let obj;
+                                if (req.body.orderId) {
+                                        obj = {
+                                                orderId: req.body.orderId,
+                                                user: req.user._id,
+                                                date: date,
+                                                month: month,
+                                                amount: req.body.balance,
+                                                type: "Debit",
+                                        };
+                                }
+                                if (req.body.subscriptionId) {
+                                        obj = {
+                                                subscriptionId: req.body.subscriptionId,
+                                                user: req.user._id,
+                                                date: date,
+                                                month: month,
+                                                amount: req.body.balance,
+                                                type: "Debit",
+                                        };
+                                }
                                 const data1 = await transactionModel.create(obj);
                                 if (data1) {
                                         res.status(200).json({ status: 200, message: "Money has been deducted.", data: update, });
@@ -838,7 +852,20 @@ exports.giveRating = async (req, res) => {
                                                         let averageRating = (((findVendorRating.averageRating * findVendorRating.rating.length) + req.body.rating) / (findVendorRating.rating.length + 1));
                                                         let update = await rating.findByIdAndUpdate({ _id: findVendorRating._id }, { $set: { averageRating: parseFloat(averageRating).toFixed(2), totalRating: findVendorRating.rating.length + 1 }, $push: { rating: obj } }, { new: true });
                                                         if (update) {
-                                                                return res.status(200).json({ status: 200, message: "Rating given successfully.", data: update });
+                                                                let obj2 = {
+                                                                        vendorId: findUsers.vendorId,
+                                                                        orderId: req.params.orderId,
+                                                                        staffId: findUsers._id,
+                                                                        userId: findUser._id,
+                                                                        rating: req.body.rating,
+                                                                        comment: req.body.comment,
+                                                                        date: Date.now(),
+                                                                        month: month,
+                                                                }
+                                                                const Datas = await orderRatingModel.create(obj2);
+                                                                if (Datas) {
+                                                                        return res.status(200).json({ status: 200, message: "Rating given successfully.", data: update });
+                                                                }
                                                         }
                                                 }
                                         }
@@ -871,7 +898,20 @@ exports.giveRating = async (req, res) => {
                                                         totalRating: 1
                                                 }
                                                 const objs = await rating.create(obj);
-                                                return res.status(200).json({ status: 200, message: "Rating given successfully.", data: Data });
+                                                if (objs) {
+                                                        let obj2 = {
+                                                                vendorId: findUsers.vendorId,
+                                                                orderId: req.params.orderId,
+                                                                staffId: findUsers._id,
+                                                                userId: findUser._id,
+                                                                rating: req.body.rating,
+                                                                comment: req.body.comment,
+                                                                date: Date.now(),
+                                                                month: month,
+                                                        }
+                                                        const Datas = await orderRatingModel.create(obj2);
+                                                        return res.status(200).json({ status: 200, message: "Rating given successfully.", data: Data });
+                                                }
                                         }
                                 }
                         } else {

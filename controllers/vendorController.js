@@ -13,7 +13,8 @@ const serviceCategory = require('../models/serviceCategory')
 const Coupan = require('../models/Coupan')
 const rating = require('../models/ratingModel');
 const orderModel = require('../models/orderModel');
-
+const orderRatingModel = require('../models/orderRatingModel');
+const moment = require('moment');
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
@@ -618,7 +619,6 @@ exports.listRating = async (req, res) => {
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
 exports.reportRating = async (req, res) => {
         try {
                 let vendorData = await User.findOne({ _id: req.user._id });
@@ -626,15 +626,32 @@ exports.reportRating = async (req, res) => {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
                         let month = new Date(Date.now()).getMonth() + 1;
+                        let date = new Date(Date.now()).getMonth();
+                        let year = new Date(Date.now()).getMonth();
+                        const xmas95 = new Date(`${vendorData.createdAt}`);
+                        const startMonth = xmas95.getMonth() + 1;
+                        const startYear = xmas95.getFullYear();
+                        const startDate = xmas95.getDate();
                         let lastMonth = new Date(Date.now()).getMonth();
                         let findRating = await rating.findOne({ userId: vendorData._id, month: month })
                         let findLastRating = await rating.findOne({ userId: vendorData._id, month: lastMonth })
+                        let findLast50JobRating = await orderRatingModel.find({ $or: [{ vendorId: vendorData._id }, { staffId: vendorData._id }] }).sort({ 'createdAt': -1 });
+                        let last50Job, rating = 0;
+                        if (findLast50JobRating.length > 0) {
+                                for (let i = 0; i < 50; i++) {
+                                        rating = rating + findLast50JobRating[i].rating
+                                }
+                        }
+                        last50Job = rating / 50;
+                        var start = moment(`${startYear}-${startMonth}-${startDate}`);
+                        var end = moment(`${year}-${month}-${date}`);
+                        let noOfDays = end.diff(start, "days")
                         let obj = {
                                 overAllrating: overAllrating,
                                 thisMonth: findRating.averageRating,
                                 lastMonth: findLastRating.averageRating,
                                 last50Job: last50Job,
-                                jobTillDate: jobTillDate,
+                                jobTillDate: findLast50JobRating.length,
                                 noOfDays: noOfDays
                         }
                         res.json({ status: 200, message: 'Data found successfully.', data: obj });
@@ -642,6 +659,32 @@ exports.reportRating = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.getOngoingOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ vendorId: req.user._id, serviceStatus: "Pending" });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getCompleteOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ vendorId: req.user._id, serviceStatus: "Complete" });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
 const reffralCode = async () => {

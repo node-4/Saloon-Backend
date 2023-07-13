@@ -19,14 +19,14 @@ const storage = new CloudinaryStorage({
     },
 });
 const upload = multer({ storage: storage });
-var cpUpload = upload.fields([{ name: 'panCard', maxCount: 1 },{ name: 'aadharCard', maxCount: 1 }, { name: 'otherImage', maxCount: 1 }]);
+var cpUpload = upload.fields([{ name: 'panCard', maxCount: 1 }, { name: 'aadharCard', maxCount: 1 }, { name: 'otherImage', maxCount: 1 }]);
 
 const express = require("express");
 const router = express()
 router.post("/registration", auth.registration);
 router.post("/:id", auth.verifyOtp);
 router.put("/updateProfile", [authJwt.verifyToken], auth.updateProfile);
-router.put("/updateDocument", [authJwt.verifyToken],cpUpload, auth.updateDocument);
+router.put("/updateDocument", [authJwt.verifyToken], cpUpload, auth.updateDocument);
 router.get('/getSubscription', auth.getSubscription);
 router.post("/takeSubscription/:id", [authJwt.verifyToken], auth.takeSubscription);
 router.post("/verifySubscription/:transactionId", [authJwt.verifyToken], auth.verifySubscription);
@@ -47,6 +47,9 @@ router.get("/listService/:serviceCategoryId", [authJwt.verifyToken], auth.listSe
 router.post("/Coupan/addCoupan", [authJwt.verifyToken], auth.addCoupan);
 router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
 router.get("/rating/listRating", [authJwt.verifyToken], auth.listRating);
+router.get("/rating/reportRating", [authJwt.verifyToken], auth.reportRating);
+router.get('/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);
+router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
 
 
 
