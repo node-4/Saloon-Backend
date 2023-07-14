@@ -6,6 +6,7 @@ var userSchema = new schema(
         categoryId: { type: mongoose.Schema.ObjectId, ref: 'Category' },
         vendorId: { type: schema.Types.ObjectId, ref: "user" },
         subscriptionId: { type: mongoose.Schema.ObjectId, ref: "subscription", },
+        booking: { type: Number },
         refferalCode: { type: String, },
         refferUserId: { type: schema.Types.ObjectId, ref: "user" },
         joinUser: [{ type: schema.Types.ObjectId, ref: "user" }],
@@ -174,6 +175,9 @@ var userSchema = new schema(
         wallet: {
             type: Number,
             default: 0,
+        },
+        servieImages: {
+            type: Array
         },
     },
     { timestamps: true }

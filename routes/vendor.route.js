@@ -33,7 +33,7 @@ router.post("/verifySubscription/:transactionId", [authJwt.verifyToken], auth.ve
 router.post("/login/WithPhone", auth.loginWithPhone);
 router.post("/resendOtp/:id", auth.resendOTP);
 router.get("/getProfile", [authJwt.verifyToken], auth.getProfile);
-router.post("/socialLogin", auth.socialLogin);
+router.post("/social/Login", auth.socialLogin);
 router.post("/forgetPassword/:email", auth.forgetPassword);
 router.post("/resetPassword/:email", auth.resetPassword);
 router.post("/login/withPassword", auth.signin);
@@ -50,6 +50,8 @@ router.get("/rating/listRating", [authJwt.verifyToken], auth.listRating);
 router.get("/rating/reportRating", [authJwt.verifyToken], auth.reportRating);
 router.get('/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);
 router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
+router.get('/getOrders', [authJwt.verifyToken], auth.getOrders);
+router.put("/updateServiceImages", [authJwt.verifyToken], upload.array('image'), auth.updateServiceImages);
 
 
 

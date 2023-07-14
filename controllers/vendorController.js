@@ -24,6 +24,7 @@ exports.registration = async (req, res) => {
                         req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
                         req.body.accountVerification = false;
                         req.body.userType = "VENDOR";
+                        req.body.booking = 3;
                         const userCreate = await User.create(req.body);
                         let obj = {
                                 id: userCreate._id,
@@ -346,7 +347,7 @@ exports.resetPassword = async (req, res) => {
         try {
                 const user = await User.findOne({ email: email });
                 if (!user) {
-                        return res.status(400).send({ message: "User not found" });
+                        return res.status(404).send({ message: "User not found" });
                 } else {
                         if (user.otp !== req.body.otp || user.otpExpiration < Date.now()) {
                                 return res.status(400).json({ message: "Invalid OTP" });
@@ -427,8 +428,7 @@ exports.addStaff = async (req, res) => {
                                 req.body.userType = "STAFF";
                                 req.body.serviceCategoryId = serviceCategoryId;
                                 const userCreate = await User.create(req.body);
-                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
-                                res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
+                                res.status(200).send({ status: 200, message: "Staff add successfully ", data: userCreate, });
                         } else {
                                 return res.status(409).send({ status: 409, msg: "Already Exit" });
                         }
@@ -446,7 +446,7 @@ exports.getStaff = async (req, res) => {
                 if (staff.length == 0) {
                         return res.status(404).send({ status: 404, message: "Staff not found" });
                 } else {
-                        res.status(200).json({ message: "Staff Category Found", status: 200, data: staff, });
+                        res.status(200).json({ message: "Staff Found", status: 200, data: staff, });
                 }
         } catch (error) {
                 console.error(error);
@@ -458,10 +458,10 @@ exports.removeStaff = async (req, res) => {
                 const { id } = req.params;
                 const staff = await User.findOne({ _id: id, vendorId: req.user._id, userType: "STAFF" });
                 if (!staff) {
-                        res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                        res.status(404).json({ status: 404, message: "Staff Not Found" });
                 } else {
                         await User.findByIdAndDelete(staff._id);
-                        res.status(200).json({ message: "Staff Category Deleted Successfully !" });
+                        res.status(200).json({ status: 200, message: "Staff Deleted Successfully !" });
                 }
         } catch (error) {
                 console.error(error);
@@ -477,7 +477,7 @@ exports.updateStaff = async (req, res) => {
                 } else {
                         const staff = await User.findOne({ _id: req.params.id, vendorId: user._id, userType: "STAFF" });
                         if (!staff) {
-                                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                                res.status(404).json({ message: "Staff Not Found", status: 404 });
                         } else {
                                 let serviceCategoryId = []
                                 for (let i = 0; i < req.body.service.length; i++) {
@@ -542,11 +542,11 @@ exports.listService = async (req, res) => {
                         if (!findStore) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
-                                let findService = await service.find({ serviceCategoryId: findStore._id }).populate('serviceCategoryId vendorId');
+                                let findService = await service.find({ serviceCategoryId: findStore._id });
                                 if (findService.length == 0) {
                                         return res.status(404).send({ status: 404, message: "Data not found" });
                                 } else {
-                                        res.json({ status: 200, message: 'Service Data found successfully.', service: findService, store: findStore });
+                                        res.json({ status: 200, message: 'Service Data found successfully.', service: findService, serviceCategory: findStore, images: vendorData.servieImages });
                                 }
                         }
                 }
@@ -611,7 +611,7 @@ exports.listRating = async (req, res) => {
                         if (findRating.length == 0) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
-                                res.json({ status: 200, message: 'Coupan Data found successfully.', service: findRating });
+                                res.json({ status: 200, message: 'Rating Data found successfully.', service: findRating });
                         }
                 }
         } catch (error) {
@@ -626,30 +626,43 @@ exports.reportRating = async (req, res) => {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
                         let month = new Date(Date.now()).getMonth() + 1;
-                        let date = new Date(Date.now()).getMonth();
-                        let year = new Date(Date.now()).getMonth();
+                        let date = new Date(Date.now()).getDate();
+                        let last50Job, overAllrating = 0, rat = 0, rats = 0, thisMonth = 0, lastsMonth = 0;
+                        let year = new Date(Date.now()).getFullYear();
                         const xmas95 = new Date(`${vendorData.createdAt}`);
                         const startMonth = xmas95.getMonth() + 1;
                         const startYear = xmas95.getFullYear();
                         const startDate = xmas95.getDate();
                         let lastMonth = new Date(Date.now()).getMonth();
                         let findRating = await rating.findOne({ userId: vendorData._id, month: month })
+                        if (findRating) {
+                                thisMonth = findRating.averageRating
+                        }
                         let findLastRating = await rating.findOne({ userId: vendorData._id, month: lastMonth })
+                        if (findLastRating) {
+                                lastsMonth = findLastRating.averageRating
+                        }
                         let findLast50JobRating = await orderRatingModel.find({ $or: [{ vendorId: vendorData._id }, { staffId: vendorData._id }] }).sort({ 'createdAt': -1 });
-                        let last50Job, rating = 0;
                         if (findLast50JobRating.length > 0) {
                                 for (let i = 0; i < 50; i++) {
-                                        rating = rating + findLast50JobRating[i].rating
+                                        rat = rat + findLast50JobRating[i].rating
                                 }
                         }
-                        last50Job = rating / 50;
+                        last50Job = rat / 50;
+                        let findoverAllrating = await orderRatingModel.find({ $or: [{ vendorId: vendorData._id }, { staffId: vendorData._id }] }).sort({ 'createdAt': -1 });
+                        if (findoverAllrating.length > 0) {
+                                for (let i = 0; i < findoverAllrating.length; i++) {
+                                        rats = rats + findoverAllrating[i].rating
+                                }
+                                overAllrating = rats / findoverAllrating.length;
+                        }
                         var start = moment(`${startYear}-${startMonth}-${startDate}`);
                         var end = moment(`${year}-${month}-${date}`);
                         let noOfDays = end.diff(start, "days")
                         let obj = {
                                 overAllrating: overAllrating,
-                                thisMonth: findRating.averageRating,
-                                lastMonth: findLastRating.averageRating,
+                                thisMonth: thisMonth,
+                                lastMonth: lastsMonth,
                                 last50Job: last50Job,
                                 jobTillDate: findLast50JobRating.length,
                                 noOfDays: noOfDays
@@ -685,6 +698,62 @@ exports.getCompleteOrders = async (req, res) => {
         } catch (error) {
                 console.log(error);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getOrders = async (req, res) => {
+        try {
+                let query = { vendorId: req.user._id }
+                const { orderId, fromDate, toDate, status } = req.query;
+                if (orderId) {
+                        query.orderId = orderId;
+                }
+                if (status) {
+                        query.serviceStatus = status;
+                }
+                if (fromDate && !toDate) {
+                        query.createdAt = { $gte: fromDate };
+                }
+                if (!fromDate && toDate) {
+                        query.createdAt = { $lte: toDate };
+                }
+                if (fromDate && toDate) {
+                        query.$and = [
+                                { createdAt: { $gte: fromDate } },
+                                { createdAt: { $lte: toDate } },
+                        ]
+                }
+                const data = await orderModel.find(query);
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+
+exports.updateServiceImages = async (req, res) => {
+        try {
+                const user = await User.findOne({ _id: req.user._id, });
+                if (!user) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let servieImages = []
+                        if (req.files) {
+                                for (let i = 0; i < req.files.length; i++) {
+                                        servieImages.push(req.files[i].path)
+                                }
+                        }
+                        let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: { servieImages: servieImages } }, { new: true });
+                        if (update) {
+                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 const reffralCode = async () => {
