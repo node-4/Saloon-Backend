@@ -93,15 +93,21 @@ exports.loginWithPhone = async (req, res) => {
                 const { phone } = req.body;
                 const user = await User.findOne({ phone: phone, userType: "USER" });
                 if (!user) {
-                        return res.status(400).send({ msg: "not found" });
+                        let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                        let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        let accountVerification = false;
+                        const newUser = await User.create({ phone: phone, otp, otpExpiration, accountVerification, userType: "USER" });
+                        let obj = { id: newUser._id, otp: newUser.otp, phone: newUser.phone }
+                        res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
+                } else {
+                        const userObj = {};
+                        userObj.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                        userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        userObj.accountVerification = false;
+                        const updated = await User.findOneAndUpdate({ phone: phone, userType: "USER" }, userObj, { new: true, });
+                        let obj = { id: updated._id, otp: updated.otp, phone: updated.phone }
+                        res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
                 }
-                const userObj = {};
-                userObj.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-                userObj.accountVerification = false;
-                const updated = await User.findOneAndUpdate({ phone: phone, userType: "USER" }, userObj, { new: true, });
-                let obj = { id: updated._id, otp: updated.otp, phone: updated.phone }
-                res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: "Server error" });
