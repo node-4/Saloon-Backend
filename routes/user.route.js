@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const express = require("express");
 const router = express()
-router.post("/registration", auth.registration);
+router.post("/registration", [authJwt.verifyToken], auth.registration);
 router.post("/socialLogin", auth.socialLogin);
 router.post("/loginWithPhone", auth.loginWithPhone);
 router.post("/:id", auth.verifyOtp);

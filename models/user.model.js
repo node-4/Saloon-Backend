@@ -98,6 +98,10 @@ var userSchema = new schema(
             type: Boolean,
             default: false,
         },
+        completeProfile: {
+            type: Boolean,
+            default: false,
+        },
         userType: {
             type: String,
             enum: ["USER", "VENDOR", "STAFF", "ADMIN"],

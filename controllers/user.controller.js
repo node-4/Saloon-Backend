@@ -17,17 +17,16 @@ const rating = require('../models/ratingModel');
 const orderRatingModel = require('../models/orderRatingModel');
 exports.registration = async (req, res) => {
         try {
-                const { phone } = req.body;
-                const user = await User.findOne({ phone: phone, userType: "USER" });
-                if (!user) {
+                const user = await User.findOne({ _id: req.user._id });
+                if (user) {
                         if (req.body.refferalCode == null || req.body.refferalCode == undefined) {
                                 req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
                                 req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
                                 req.body.accountVerification = false;
-                                req.body.userType = "USER";
                                 req.body.refferalCode = await reffralCode();
-                                const userCreate = await User.create(req.body);
-                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
+                                req.body.completeProfile = true;
+                                const userCreate = await User.findOneAndUpdate({ _id: user._id }, req.body, { new: true, });
+                                let obj = { id: userCreate._id, completeProfile: userCreate.completeProfile, phone: userCreate.phone }
                                 res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
                         } else {
                                 const findUser = await User.findOne({ refferalCode: req.body.refferalCode });
@@ -38,10 +37,11 @@ exports.registration = async (req, res) => {
                                         req.body.userType = "USER";
                                         req.body.refferalCode = await reffralCode();
                                         req.body.refferUserId = findUser._id;
-                                        const userCreate = await User.create(req.body);
+                                        req.body.completeProfile = true;
+                                        const userCreate = await User.findOneAndUpdate({ _id: user._id }, req.body, { new: true, });
                                         if (userCreate) {
                                                 let updateWallet = await User.findOneAndUpdate({ _id: findUser._id }, { $push: { joinUser: userCreate._id } }, { new: true });
-                                                let obj = { id: userCreate._id, otp: userCreate.otp, phone: userCreate.phone }
+                                                let obj = { id: userCreate._id, completeProfile: userCreate.completeProfile, phone: userCreate.phone }
                                                 res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
                                         }
                                 } else {
@@ -49,7 +49,7 @@ exports.registration = async (req, res) => {
                                 }
                         }
                 } else {
-                        return res.status(409).send({ status: 409, msg: "Already Exit" });
+                        return res.status(404).send({ status: 404, msg: "Not found" });
                 }
         } catch (error) {
                 console.error(error);
@@ -125,7 +125,8 @@ exports.verifyOtp = async (req, res) => {
                         userId: updated._id,
                         otp: updated.otp,
                         phone: updated.phone,
-                        token: accessToken
+                        token: accessToken,
+                        completeProfile: updated.completeProfile
                 }
                 res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (err) {
