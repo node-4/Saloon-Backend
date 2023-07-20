@@ -5,6 +5,9 @@ const categorySchema = schema({
     name: {
         type: String
     },
+    image: {
+        type: String
+    },
     status: {
         type: String,
         enum: ["Active", "Block"],

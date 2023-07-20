@@ -115,11 +115,15 @@ exports.removeCategory = async (req, res) => {
 };
 exports.createServiceCategory = async (req, res) => {
     try {
-        let findCategory = await serviceCategory.findOne({ name: req.body.name});
+        let findCategory = await serviceCategory.findOne({ name: req.body.name });
         if (findCategory) {
             res.status(409).json({ message: "Service Category already exit.", status: 404, data: {} });
         } else {
-            const data = { name: req.body.name };
+            let fileUrl;
+            if (req.file) {
+                fileUrl = req.file ? req.file.path : "";
+            }
+            const data = { name: req.body.name, image: fileUrl };
             const category = await serviceCategory.create(data);
             res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
         }
@@ -128,7 +132,7 @@ exports.createServiceCategory = async (req, res) => {
     }
 };
 exports.getServiceCategory = async (req, res) => {
-    const categories = await serviceCategory.find({  });
+    const categories = await serviceCategory.find({});
     res.status(201).json({ message: "Service Category Found", status: 200, data: categories, });
 };
 exports.updateServiceCategory = async (req, res) => {
@@ -137,7 +141,12 @@ exports.updateServiceCategory = async (req, res) => {
     if (!category) {
         res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
     }
-    category.name = req.body.name;
+    let fileUrl;
+    if (req.file) {
+        fileUrl = req.file ? req.file.path : "";
+    }
+    category.image = fileUrl || category.image;
+    category.name = req.body.name || category.name;
     let update = await category.save();
     res.status(200).json({ message: "Updated Successfully", data: update });
 };

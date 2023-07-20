@@ -26,9 +26,9 @@ router.post("/Category/addCategory", [authJwt.verifyToken], auth.createCategory)
 router.get("/Category/allCategory", auth.getCategories);
 router.put("/Category/updateCategory/:id", [authJwt.verifyToken], auth.updateCategory);
 router.delete("/Category/deleteCategory/:id", [authJwt.verifyToken], auth.removeCategory);
-router.post("/service/addCategory", [authJwt.verifyToken], auth.createServiceCategory);
+router.post("/service/addCategory", [authJwt.verifyToken],upload.single('image'), auth.createServiceCategory);
 router.get("/service/allCategory", auth.getServiceCategory);
-router.put("/service/updateCategory/:id", [authJwt.verifyToken], auth.updateServiceCategory);
+router.put("/service/updateCategory/:id", [authJwt.verifyToken],upload.single('image'), auth.updateServiceCategory);
 router.delete("/service/deleteCategory/:id", [authJwt.verifyToken], auth.removeServiceCategory);
 router.post("/addContactDetails", [authJwt.verifyToken], auth.addContactDetails);
 router.get("/viewContactDetails", auth.viewContactDetails);
