@@ -213,7 +213,7 @@ exports.updateLocation = async (req, res) => {
                         }
                         let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: { currentLocation: req.body.currentLocation, city: req.body.city, sector: req.body.sector } }, { new: true });
                         if (update) {
-                                res.status(200).send({ status: 200, message: "Location update successfully.", data: update });
+                                res.status(200).send({ status: 200, message: "Location update successfully.", data: update.currentLocation });
                         }
                 }
         } catch (error) {
