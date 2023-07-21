@@ -180,6 +180,9 @@ var userSchema = new schema(
             type: Number,
             default: 0,
         },
+        serviceName: {
+            type: String
+        },
         servieImages: {
             type: Array
         },

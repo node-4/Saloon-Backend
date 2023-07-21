@@ -746,7 +746,19 @@ exports.updateServiceImages = async (req, res) => {
                                         servieImages.push(req.files[i].path)
                                 }
                         }
-                        let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: { servieImages: servieImages } }, { new: true });
+                        let obj = {
+                                Monday: req.body.Monday || user.Monday,
+                                Tuesday: req.body.Tuesday || user.Tuesday,
+                                Wednesday: req.body.Wednesday || user.Wednesday,
+                                Thursday: req.body.Thursday || user.Thursday,
+                                Friday: req.body.Friday || user.Friday,
+                                Saturday: req.body.Saturday || user.Saturday,
+                                Sunday: req.body.Sunday || user.Sunday,
+                                serviceName: req.body.serviceName || user.serviceName,
+                                servieImages: servieImages || user.servieImages
+                        }
+
+                        let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
                         if (update) {
                                 res.status(200).send({ status: 200, message: "update successfully.", data: update });
                         }
