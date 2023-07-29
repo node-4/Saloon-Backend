@@ -6,9 +6,8 @@ const categorySchema = new mongoose.Schema({
         required: [true, "name Category Required"],
     },
     status: {
-        type: String,
-        enum: ["Active", "Block"],
-        default: "Active"
+        type: Boolean,
+        default: true
     },
 });
 
