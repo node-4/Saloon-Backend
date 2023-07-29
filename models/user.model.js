@@ -191,7 +191,7 @@ var userSchema = new schema(
             default: 0,
         },
         likeUser: [{
-            type: objectId,
+            type: mongoose.Schema.ObjectId,
             ref: "user",
         }],
     },
