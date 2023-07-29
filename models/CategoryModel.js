@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema({
         required: [true, "name Category Required"],
     },
     status: {
-        type: Boolean,
+        type: String,
         default: true
     },
 });

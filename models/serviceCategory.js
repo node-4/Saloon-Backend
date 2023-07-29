@@ -9,10 +9,9 @@ const categorySchema = schema({
         type: String
     },
     status: {
-        type: String,
-        enum: ["Active", "Block"],
-        default: "Active"
+        type: Boolean,
+        default: true
     },
-},{ timestamps: true });
+}, { timestamps: true });
 
 module.exports = mongoose.model("serviceCategory", categorySchema);
