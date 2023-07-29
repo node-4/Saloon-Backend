@@ -940,7 +940,7 @@ exports.addLike = async (req, res) => {
                         if (!post) {
                                 return res.status(404).json({ error: 'not found' });
                         } else {
-                                if (post.likeUser.includes(user)) {
+                                if (post.likeUser.includes(id)) {
                                         const update = await User.findByIdAndUpdate({ _id: post._id }, { $pull: { likeUser: findUser._id }, $set: { likeCount: post.likeCount - 1 } }, { new: true });
                                         if (update) {
                                                 return res.status(200).json({ status: 200, message: "Un like successfully", data: update });
