@@ -186,6 +186,14 @@ var userSchema = new schema(
         servieImages: {
             type: Array
         },
+        likeCount: {
+            type: Number,
+            default: 0,
+        },
+        likeUser: [{
+            type: objectId,
+            ref: "user",
+        }],
     },
     { timestamps: true }
 );

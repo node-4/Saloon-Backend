@@ -929,6 +929,35 @@ exports.giveRating = async (req, res) => {
                 res.status(501).send({ message: "server error.", data: {}, });
         }
 };
+exports.addLike = async (req, res) => {
+        try {
+                const { id } = req.params;
+                let findUser = await User.findOne({ _id: req.user._id });
+                if (!findUser) {
+                        res.status(404).json({ message: "Token Expired or invalid.", status: 404 });
+                } else {
+                        const post = await User.findById(id);
+                        if (!post) {
+                                return res.status(404).json({ error: 'not found' });
+                        } else {
+                                if (post.likeUser.includes(user)) {
+                                        const update = await User.findByIdAndUpdate({ _id: post._id }, { $pull: { likeUser: findUser._id }, $set: { likeCount: post.likeCount - 1 } }, { new: true });
+                                        if (update) {
+                                                res.status(200).json({ status: 200, message: "Un like successfully", data: update });
+                                        }
+                                } else {
+                                        const update = await User.findByIdAndUpdate({ _id: post._id }, { $push: { likeUser: findUser._id }, $set: { likeCount: post.likeCount + 1 } }, { new: true });
+                                        if (update) {
+                                                res.status(200).json({ status: 200, message: "Like successfully", data: update });
+                                        }
+                                }
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'An error occurred while adding the like' });
+        }
+};
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let OTP = '';
