@@ -940,15 +940,15 @@ exports.addLike = async (req, res) => {
                         if (!post) {
                                 return res.status(404).json({ error: 'not found' });
                         } else {
-                                if (post.likeUser.includes(id)) {
+                                if (post.likeUser.includes(findUser._id)) {
                                         const update = await User.findByIdAndUpdate({ _id: post._id }, { $pull: { likeUser: findUser._id }, $set: { likeCount: post.likeCount - 1 } }, { new: true });
                                         if (update) {
-                                                return res.status(200).json({ status: 200, message: "Un like successfully", data: update });
+                                                return res.status(200).json({ status: 200, message: "Un like successfully", likeUser: update.likeUser, likeCount: update.likeCount });
                                         }
                                 } else {
                                         const update = await User.findByIdAndUpdate({ _id: post._id }, { $push: { likeUser: findUser._id }, $set: { likeCount: post.likeCount + 1 } }, { new: true });
                                         if (update) {
-                                                return res.status(200).json({ status: 200, message: "Like successfully", data: update });
+                                                return res.status(200).json({ status: 200, message: "Like successfully", likeUser: update.likeUser, likeCount: update.likeCount });
                                         }
                                 }
                         }
