@@ -31,13 +31,13 @@ exports.registration = async (req, res) => {
                                 otp: userCreate.otp,
                                 phone: userCreate.phone
                         }
-                        res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
+                        return res.status(200).send({ status: 200, message: "Registered successfully ", data: obj, });
                 } else {
                         return res.status(409).send({ status: 409, msg: "Already Exit" });
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ message: "Server error" });
+                return res.status(500).json({ message: "Server error" });
         }
 };
 exports.verifyOtp = async (req, res) => {
@@ -60,10 +60,10 @@ exports.verifyOtp = async (req, res) => {
                         phone: updated.phone,
                         accessToken: accessToken
                 }
-                res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
+                return res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (err) {
                 console.log(err.message);
-                res.status(500).send({ error: "internal server error" + err.message });
+                return res.status(500).send({ error: "internal server error" + err.message });
         }
 };
 exports.updateProfile = async (req, res) => {
@@ -75,7 +75,7 @@ exports.updateProfile = async (req, res) => {
                         let id = req.body.categoryId;
                         const category = await Category.findById(id);
                         if (!category) {
-                                res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+                                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
                         }
                         let obj = {
                                 categoryId: category._id || user.categoryId,
@@ -85,12 +85,12 @@ exports.updateProfile = async (req, res) => {
                         }
                         let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
                         if (update) {
-                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.updateDocument = async (req, res) => {
@@ -128,20 +128,20 @@ exports.updateDocument = async (req, res) => {
                         console.log(obj);
                         let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
                         if (update) {
-                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.getSubscription = async (req, res) => {
         try {
                 const findSubscription = await subscription.find();
-                res.status(200).json({ status: 200, message: "Subscription detail successfully.", data: findSubscription });
+                return res.status(200).json({ status: 200, message: "Subscription detail successfully.", data: findSubscription });
         } catch (err) {
-                res.status(500).json({ message: err.message });
+                return res.status(500).json({ message: err.message });
         }
 };
 exports.takeSubscription = async (req, res) => {
@@ -166,7 +166,7 @@ exports.takeSubscription = async (req, res) => {
                                         }
                                         let update = await transactionModel.create(obj);
                                         if (update) {
-                                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                                         }
                                 } else {
                                         let obj = {
@@ -179,7 +179,7 @@ exports.takeSubscription = async (req, res) => {
                                         }
                                         let update = await transactionModel.create(obj);
                                         if (update) {
-                                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                                         }
                                 }
                         } else {
@@ -188,7 +188,7 @@ exports.takeSubscription = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.verifySubscription = async (req, res) => {
@@ -231,7 +231,7 @@ exports.verifySubscription = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.loginWithPhone = async (req, res) => {
@@ -247,10 +247,10 @@ exports.loginWithPhone = async (req, res) => {
                 userObj.accountVerification = false;
                 const updated = await User.findOneAndUpdate({ phone: phone, userType: "VENDOR" }, userObj, { new: true, });
                 let obj = { id: updated._id, otp: updated.otp, phone: updated.phone }
-                res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
+                return res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ message: "Server error" });
+                return res.status(500).json({ message: "Server error" });
         }
 };
 exports.resendOTP = async (req, res) => {
@@ -269,10 +269,10 @@ exports.resendOTP = async (req, res) => {
                         otp: updated.otp,
                         phone: updated.phone
                 }
-                res.status(200).send({ status: 200, message: "OTP resent", data: obj });
+                return res.status(200).send({ status: 200, message: "OTP resent", data: obj });
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.getProfile = async (req, res) => {
@@ -285,7 +285,7 @@ exports.getProfile = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
 exports.socialLogin = async (req, res) => {
@@ -336,10 +336,10 @@ exports.forgetPassword = async (req, res) => {
                         otp: updated.otp,
                         phone: updated.phone
                 }
-                res.status(200).send({ status: 200, message: "OTP resent", data: obj });
+                return res.status(200).send({ status: 200, message: "OTP resent", data: obj });
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.resetPassword = async (req, res) => {
@@ -354,15 +354,15 @@ exports.resetPassword = async (req, res) => {
                         } else {
                                 if (req.body.newPassword == req.body.confirmPassword) {
                                         const updated = await User.findOneAndUpdate({ _id: user._id }, { $set: { password: bcrypt.hashSync(req.body.newPassword) } }, { new: true });
-                                        res.status(200).send({ message: "Password update successfully.", data: updated, });
+                                        return res.status(200).send({ message: "Password update successfully.", data: updated, });
                                 } else {
-                                        res.status(501).send({ message: "Password Not matched.", data: {}, });
+                                        return res.status(501).send({ message: "Password Not matched.", data: {}, });
                                 }
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ message: "Server error" + error.message });
+                return res.status(500).send({ message: "Server error" + error.message });
         }
 };
 exports.signin = async (req, res) => {
@@ -377,10 +377,10 @@ exports.signin = async (req, res) => {
                         return res.status(401).send({ message: "Wrong password" });
                 }
                 const accessToken = jwt.sign({ id: user._id }, authConfig.secret, { expiresIn: authConfig.accessTokenTime, });
-                res.status(201).send({ data: user, accessToken: accessToken });
+                return res.status(201).send({ data: user, accessToken: accessToken });
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ message: "Server error" + error.message });
+                return res.status(500).send({ message: "Server error" + error.message });
         }
 };
 exports.updateWorkdetails = async (req, res) => {
@@ -398,12 +398,12 @@ exports.updateWorkdetails = async (req, res) => {
                         }
                         let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
                         if (update) {
-                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.addStaff = async (req, res) => {
@@ -417,7 +417,7 @@ exports.addStaff = async (req, res) => {
                                 for (let i = 0; i < req.body.service.length; i++) {
                                         const category = await serviceCategory.findById({ _id: req.body.service[i] });
                                         if (!category) {
-                                                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                                                return res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
                                         }
                                         serviceCategoryId.push(req.body.service[i])
                                 }
@@ -428,7 +428,7 @@ exports.addStaff = async (req, res) => {
                                 req.body.userType = "STAFF";
                                 req.body.serviceCategoryId = serviceCategoryId;
                                 const userCreate = await User.create(req.body);
-                                res.status(200).send({ status: 200, message: "Staff add successfully ", data: userCreate, });
+                                return res.status(200).send({ status: 200, message: "Staff add successfully ", data: userCreate, });
                         } else {
                                 return res.status(409).send({ status: 409, msg: "Already Exit" });
                         }
@@ -437,7 +437,7 @@ exports.addStaff = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                res.status(500).json({ message: "Server error" });
+                return res.status(500).json({ message: "Server error" });
         }
 };
 exports.getStaff = async (req, res) => {
@@ -446,11 +446,11 @@ exports.getStaff = async (req, res) => {
                 if (staff.length == 0) {
                         return res.status(404).send({ status: 404, message: "Staff not found" });
                 } else {
-                        res.status(200).json({ message: "Staff Found", status: 200, data: staff, });
+                        return res.status(200).json({ message: "Staff Found", status: 200, data: staff, });
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.removeStaff = async (req, res) => {
@@ -458,14 +458,14 @@ exports.removeStaff = async (req, res) => {
                 const { id } = req.params;
                 const staff = await User.findOne({ _id: id, vendorId: req.user._id, userType: "STAFF" });
                 if (!staff) {
-                        res.status(404).json({ status: 404, message: "Staff Not Found" });
+                        return res.status(404).json({ status: 404, message: "Staff Not Found" });
                 } else {
                         await User.findByIdAndDelete(staff._id);
-                        res.status(200).json({ status: 200, message: "Staff Deleted Successfully !" });
+                        return res.status(200).json({ status: 200, message: "Staff Deleted Successfully !" });
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 
 };
@@ -477,13 +477,13 @@ exports.updateStaff = async (req, res) => {
                 } else {
                         const staff = await User.findOne({ _id: req.params.id, vendorId: user._id, userType: "STAFF" });
                         if (!staff) {
-                                res.status(404).json({ message: "Staff Not Found", status: 404 });
+                                return res.status(404).json({ message: "Staff Not Found", status: 404 });
                         } else {
                                 let serviceCategoryId = []
                                 for (let i = 0; i < req.body.service.length; i++) {
                                         const category = await serviceCategory.findById({ _id: req.body.service[i] });
                                         if (!category) {
-                                                res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
+                                                return res.status(404).json({ message: "Staff Category Not Found", status: 404, data: {} });
                                         }
                                         serviceCategoryId.push(req.body.service[i])
                                 }
@@ -501,13 +501,13 @@ exports.updateStaff = async (req, res) => {
                                 }
                                 let update = await User.findByIdAndUpdate({ _id: staff._id }, { $set: obj }, { new: true });
                                 if (update) {
-                                        res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                        return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                                 }
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.addService = async (req, res) => {
@@ -529,7 +529,7 @@ exports.addService = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.listService = async (req, res) => {
@@ -552,7 +552,7 @@ exports.listService = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.addCoupan = async (req, res) => {
@@ -579,7 +579,7 @@ exports.addCoupan = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.listCoupan = async (req, res) => {
@@ -597,7 +597,7 @@ exports.listCoupan = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.listRating = async (req, res) => {
@@ -616,7 +616,7 @@ exports.listRating = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.reportRating = async (req, res) => {
@@ -671,7 +671,7 @@ exports.reportRating = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 exports.getOngoingOrders = async (req, res) => {
@@ -684,7 +684,7 @@ exports.getOngoingOrders = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
 exports.getCompleteOrders = async (req, res) => {
@@ -697,7 +697,7 @@ exports.getCompleteOrders = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
 exports.getOrders = async (req, res) => {
@@ -730,7 +730,7 @@ exports.getOrders = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
 
@@ -760,12 +760,12 @@ exports.updateServiceImages = async (req, res) => {
 
                         let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
                         if (update) {
-                                res.status(200).send({ status: 200, message: "update successfully.", data: update });
+                                return res.status(200).send({ status: 200, message: "update successfully.", data: update });
                         }
                 }
         } catch (error) {
                 console.error(error);
-                res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 const reffralCode = async () => {
@@ -827,7 +827,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 // exports.viewStore = async (req, res) => {
@@ -840,7 +840,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 // exports.editStore = async (req, res) => {
@@ -865,7 +865,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 // exports.deleteStore = async (req, res) => {
@@ -886,7 +886,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 // exports.listStore = async (req, res) => {
@@ -904,7 +904,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 // exports.updateStoreLocation = async (req, res) => {
@@ -945,7 +945,7 @@ const reffralCode = async () => {
 //                 }
 //         } catch (error) {
 //                 console.error(error);
-//                 res.status(500).send({ status: 500, message: "Server error" + error.message });
+//              return   res.status(500).send({ status: 500, message: "Server error" + error.message });
 //         }
 // };
 //

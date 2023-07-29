@@ -19,13 +19,13 @@ exports.registration = async (req, res) => {
             req.body.userType = "ADMIN";
             req.body.accountVerification = true;
             const userCreate = await User.create(req.body);
-            res.status(200).send({ message: "registered successfully ", data: userCreate, });
+            return res.status(200).send({ message: "registered successfully ", data: userCreate, });
         } else {
-            res.status(409).send({ message: "Already Exist", data: [] });
+            return res.status(409).send({ message: "Already Exist", data: [] });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 exports.signin = async (req, res) => {
@@ -44,10 +44,10 @@ exports.signin = async (req, res) => {
         const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {
             expiresIn: authConfig.accessTokenTime,
         });
-        res.status(201).send({ data: user, accessToken: accessToken });
+        return res.status(201).send({ data: user, accessToken: accessToken });
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: "Server error" + error.message });
+        return res.status(500).send({ message: "Server error" + error.message });
     }
 };
 exports.update = async (req, res) => {
@@ -66,10 +66,10 @@ exports.update = async (req, res) => {
             user.password = bcrypt.hashSync(password, 8) || user.password;
         }
         const updated = await user.save();
-        res.status(200).send({ message: "updated", data: updated });
+        return res.status(200).send({ message: "updated", data: updated });
     } catch (err) {
         console.log(err);
-        res.status(500).send({
+        return res.status(500).send({
             message: "internal server error " + err.message,
         });
     }
@@ -78,46 +78,46 @@ exports.createCategory = async (req, res) => {
     try {
         let findCategory = await Category.findOne({ name: req.body.name });
         if (findCategory) {
-            res.status(409).json({ message: "category already exit.", status: 404, data: {} });
+            return res.status(409).json({ message: "category already exit.", status: 404, data: {} });
         } else {
             const data = { name: req.body.name };
             const category = await Category.create(data);
-            res.status(200).json({ message: "category add successfully.", status: 200, data: category });
+            return res.status(200).json({ message: "category add successfully.", status: 200, data: category });
         }
 
     } catch (error) {
-        res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
     }
 };
 exports.getCategories = async (req, res) => {
     const categories = await Category.find({});
-    res.status(201).json({ success: true, categories, });
+    return res.status(201).json({ success: true, categories, });
 };
 exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const category = await Category.findById(id);
     if (!category) {
-        res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
     }
     category.name = req.body.name;
     let update = await category.save();
-    res.status(200).json({ message: "Updated Successfully", data: update });
+    return res.status(200).json({ message: "Updated Successfully", data: update });
 };
 exports.removeCategory = async (req, res) => {
     const { id } = req.params;
     const category = await Category.findById(id);
     if (!category) {
-        res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
     } else {
         await Category.findByIdAndDelete(category._id);
-        res.status(200).json({ message: "Category Deleted Successfully !" });
+        return res.status(200).json({ message: "Category Deleted Successfully !" });
     }
 };
 exports.createServiceCategory = async (req, res) => {
     try {
         let findCategory = await serviceCategory.findOne({ name: req.body.name });
         if (findCategory) {
-            res.status(409).json({ message: "Service Category already exit.", status: 404, data: {} });
+            return res.status(409).json({ message: "Service Category already exit.", status: 404, data: {} });
         } else {
             let fileUrl;
             if (req.file) {
@@ -125,21 +125,21 @@ exports.createServiceCategory = async (req, res) => {
             }
             const data = { name: req.body.name, image: fileUrl };
             const category = await serviceCategory.create(data);
-            res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
+            return res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
         }
     } catch (error) {
-        res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
     }
 };
 exports.getServiceCategory = async (req, res) => {
     const categories = await serviceCategory.find({});
-    res.status(201).json({ message: "Service Category Found", status: 200, data: categories, });
+    return res.status(201).json({ message: "Service Category Found", status: 200, data: categories, });
 };
 exports.updateServiceCategory = async (req, res) => {
     const { id } = req.params;
     const category = await serviceCategory.findById(id);
     if (!category) {
-        res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
+        return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
     }
     let fileUrl;
     if (req.file) {
@@ -148,16 +148,16 @@ exports.updateServiceCategory = async (req, res) => {
     category.image = fileUrl || category.image;
     category.name = req.body.name || category.name;
     let update = await category.save();
-    res.status(200).json({ message: "Updated Successfully", data: update });
+    return res.status(200).json({ message: "Updated Successfully", data: update });
 };
 exports.removeServiceCategory = async (req, res) => {
     const { id } = req.params;
     const category = await serviceCategory.findById(id);
     if (!category) {
-        res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
+        return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
     } else {
         await serviceCategory.findByIdAndDelete(category._id);
-        res.status(200).json({ message: "Service Category Deleted Successfully !" });
+        return res.status(200).json({ message: "Service Category Deleted Successfully !" });
     }
 };
 
@@ -178,30 +178,30 @@ exports.addContactDetails = async (req, res) => {
             req.body.whatAppchatDescription = req.body.whatAppchatDescription || findContact.whatAppchatDescription;
             let updateContact = await ContactDetail.findByIdAndUpdate({ _id: findContact._id }, { $set: req.body }, { new: true });
             if (updateContact) {
-                res.status(200).send({ status: 200, message: "Contact Detail update successfully", data: updateContact });
+                return res.status(200).send({ status: 200, message: "Contact Detail update successfully", data: updateContact });
             }
         } else {
             let result2 = await ContactDetail.create(req.body);
             if (result2) {
-                res.status(200).send({ status: 200, message: "Contact Detail update successfully", data: result2 });
+                return res.status(200).send({ status: 200, message: "Contact Detail update successfully", data: result2 });
             }
         }
     } catch (err) {
         console.log(err.message);
-        res.status(500).send({ status: 500, msg: "internal server error", error: err.message, });
+        return res.status(500).send({ status: 500, msg: "internal server error", error: err.message, });
     }
 };
 exports.viewContactDetails = async (req, res) => {
     try {
         let findcontactDetails = await ContactDetail.findOne();
         if (!findcontactDetails) {
-            res.status(404).send({ status: 404, message: "Contact Detail not found.", data: {} });
+            return res.status(404).send({ status: 404, message: "Contact Detail not found.", data: {} });
         } else {
-            res.status(200).send({ status: 200, message: "Contact Detail fetch successfully", data: findcontactDetails });
+            return res.status(200).send({ status: 200, message: "Contact Detail fetch successfully", data: findcontactDetails });
         }
     } catch (err) {
         console.log(err);
-        res.status(500).send({ status: 500, msg: "internal server error", error: err.message, });
+        return res.status(500).send({ status: 500, msg: "internal server error", error: err.message, });
     }
 };
 exports.createSubscription = async (req, res) => {
@@ -214,15 +214,15 @@ exports.createSubscription = async (req, res) => {
             res.json({ status: 200, message: 'subscription create successfully', data: newsubscription });
         }
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        return res.status(400).json({ message: err.message });
     }
 };
 exports.getSubscription = async (req, res) => {
     try {
         const findSubscription = await subscription.find();
-        res.status(200).json({ status: 200, message: "Subscription detail successfully.", data: findSubscription });
+        return res.status(200).json({ status: 200, message: "Subscription detail successfully.", data: findSubscription });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        return res.status(500).json({ message: err.message });
     }
 };
 exports.AddBanner = async (req, res) => {
@@ -233,10 +233,10 @@ exports.AddBanner = async (req, res) => {
         }
         const data = { image: fileUrl, desc: req.body.desc }
         const Data = await banner.create(data);
-        res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
+        return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
     } catch (err) {
         console.log(err);
-        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 exports.getBanner = async (req, res) => {
@@ -245,10 +245,10 @@ exports.getBanner = async (req, res) => {
         if (Banner.length == 0) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
-        res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+        return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
     } catch (err) {
         console.log(err);
-        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 exports.getBannerById = async (req, res) => {
@@ -257,10 +257,10 @@ exports.getBannerById = async (req, res) => {
         if (!Banner) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
-        res.status(200).json({ status: 200, message: "Data found successfully.", data: Banner })
+        return res.status(200).json({ status: 200, message: "Data found successfully.", data: Banner })
     } catch (err) {
         console.log(err);
-        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 exports.DeleteBanner = async (req, res) => {
@@ -270,9 +270,9 @@ exports.DeleteBanner = async (req, res) => {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
         await banner.findByIdAndDelete({ _id: req.params.id });
-        res.status(200).json({ status: 200, message: "Banner delete successfully.", data: {} })
+        return res.status(200).json({ status: 200, message: "Banner delete successfully.", data: {} })
     } catch (err) {
         console.log(err);
-        res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
