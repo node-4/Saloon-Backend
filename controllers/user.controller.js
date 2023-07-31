@@ -142,7 +142,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2');
+                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image');
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
@@ -157,6 +157,10 @@ exports.updateProfile = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
+                        let image;
+                        if (req.file) {
+                                image = req.file.path
+                        }
                         let obj = {
                                 fullName: req.body.fullName || data.fullName,
                                 email: req.body.email || data.email,
@@ -166,7 +170,9 @@ exports.updateProfile = async (req, res) => {
                                 dob: req.body.dob || data.dob,
                                 address1: req.body.address1 || data.address1,
                                 address2: req.body.address2 || data.address2,
+                                image: image || data.image
                         }
+                        console.log(obj);
                         let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: obj }, { new: true });
                         if (update) {
                                 return res.status(200).json({ status: 200, message: "Update profile successfully.", data: update });
