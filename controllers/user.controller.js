@@ -279,7 +279,7 @@ exports.listService = async (req, res) => {
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 }
-                const staff = await User.find({ vendorId: req.params.vendorId, userType: "STAFF" }).select('_id fullName firstName lastName image');
+                const staff = await User.find({ vendorId: req.params.vendorId, userType: "STAFF" }).populate('serviceCategoryId').select('_id fullName firstName lastName image');
                 let findService = await service.find({ serviceCategoryId: req.params.serviceCategoryId, vendorId: vendorData._id })
                 if (findService.length == 0) {
                         return res.status(404).send({ status: 404, message: "Data not found" });
