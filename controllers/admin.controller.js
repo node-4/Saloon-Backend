@@ -8,7 +8,8 @@ const ContactDetail = require("../models/ContactDetail");
 const subscription = require('../models/subscription');
 const banner = require('../models/banner')
 const serviceCategory = require('../models/serviceCategory')
-
+const Charges = require('../models/Charges');
+const freeService = require('../models/freeService');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -161,6 +162,122 @@ exports.removeServiceCategory = async (req, res) => {
     }
 };
 
+exports.createCharge = async (req, res) => {
+    try {
+        let findCharges = await Charges.findOne({ name: req.body.name });
+        if (findCharges) {
+            return res.status(409).json({ message: "Charges already exit.", status: 404, data: {} });
+        } else {
+            const data = {
+                name: req.body.name,
+                charge: req.body.charge,
+                cancelation: req.body.cancelation,
+                discountCharge: req.body.discountCharge,
+                discount: req.body.discount
+            };
+            const findCharge = await Charges.create(data);
+            return res.status(200).json({ message: "Charges add successfully.", status: 200, data: findCharge });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getCharges = async (req, res) => {
+    const findCharge = await Charges.find({});
+    return res.status(201).json({ message: "Charges Found", status: 200, data: findCharge, });
+};
+exports.updateCharge = async (req, res) => {
+    const { id } = req.params;
+    const findCharge = await Charges.findById(id);
+    if (!findCharge) {
+        return res.status(404).json({ message: "Charges Not Found", status: 404, data: {} });
+    }
+    let data = {
+        charge: req.body.charge || findCharge.charge,
+        name: req.body.name || findCharge.name,
+        cancelation: req.body.cancelation || findCharge.cancelation,
+        discountCharge: req.body.discountCharge || findCharge.discountCharge,
+        discount: req.body.discount || findCharge.discount,
+    }
+    const update = await Charges.findByIdAndUpdate({ _id: findCharge._id }, { $set: data }, { new: true });
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeCharge = async (req, res) => {
+    const { id } = req.params;
+    const findCharge = await Charges.findById(id);
+    if (!findCharge) {
+        return res.status(404).json({ message: "Charges Not Found", status: 404, data: {} });
+    } else {
+        await Charges.findByIdAndDelete(findCharge._id);
+        return res.status(200).json({ message: "Charges Deleted Successfully !" });
+    }
+};
+exports.createFreeService = async (req, res) => {
+    try {
+        let findUser = await User.findById({ _id: req.body.userId });
+        if (!findUser) {
+            return res.status(404).json({ message: "user not found.", status: 404, data: {} });
+        }
+        let findService = await service.findById({ _id: req.body.serviceId });
+        if (!findService) {
+            return res.status(404).json({ message: "Service not found.", status: 404, data: {} });
+        }
+        let findFreeService = await freeService.findOne({ userId: req.body.userId, serviceId: findService._id, used: false });
+        if (findFreeService) {
+            return res.status(409).json({ message: "This free service already exit.", status: 404, data: {} });
+        } else {
+            const data = {
+                userId: req.body.userId,
+                serviceId: findService._id,
+                used: false
+            };
+            const findCharge = await freeService.create(data);
+            return res.status(200).json({ message: "free service add successfully.", status: 200, data: findCharge });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getFreeServices = async (req, res) => {
+    const findFreeService = await freeService.find({}).populate([{ path: 'userId', select: 'fullName firstName lastName' }, { path: 'serviceId', select: 'name price totalTime' }]);
+    return res.status(201).json({ message: "Free Service Found", status: 200, data: findFreeService, });
+};
+exports.updateFreeServices = async (req, res) => {
+    const { id } = req.params;
+    const findCharge = await freeService.findById(id);
+    if (!findCharge) {
+        return res.status(404).json({ message: "Free service Not Found", status: 404, data: {} });
+    }
+    let findUser = await User.findById({ _id: req.body.userId });
+    if (!findUser) {
+        return res.status(404).json({ message: "user not found.", status: 404, data: {} });
+    }
+    let findService = await service.findById({ _id: req.body.serviceId });
+    if (!findService) {
+        return res.status(404).json({ message: "Service not found.", status: 404, data: {} });
+    }
+    let findFreeService = await freeService.findOne({ _id: { $ne: findCharge._id }, userId: req.body.userId, serviceId: findService._id, used: false });
+    if (findFreeService) {
+        return res.status(409).json({ message: "This free service already exit.", status: 404, data: {} });
+    }
+    let data = {
+        userId: req.body.userId || findCharge.userId,
+        serviceId: req.body.serviceId || findCharge.serviceId,
+        used: false || findCharge.used,
+    }
+    const update = await freeService.findByIdAndUpdate({ _id: findCharge._id }, { $set: data }, { new: true });
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeFreeServices = async (req, res) => {
+    const { id } = req.params;
+    const findCharge = await freeService.findById(id);
+    if (!findCharge) {
+        return res.status(404).json({ message: "freeService Not Found", status: 404, data: {} });
+    } else {
+        await freeService.findByIdAndDelete(findCharge._id);
+        return res.status(200).json({ message: "freeService Deleted Successfully !" });
+    }
+};
 
 
 

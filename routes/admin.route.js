@@ -26,9 +26,9 @@ router.post("/Category/addCategory", [authJwt.verifyToken], auth.createCategory)
 router.get("/Category/allCategory", auth.getCategories);
 router.put("/Category/updateCategory/:id", [authJwt.verifyToken], auth.updateCategory);
 router.delete("/Category/deleteCategory/:id", [authJwt.verifyToken], auth.removeCategory);
-router.post("/service/addCategory", [authJwt.verifyToken],upload.single('image'), auth.createServiceCategory);
+router.post("/service/addCategory", [authJwt.verifyToken], upload.single('image'), auth.createServiceCategory);
 router.get("/service/allCategory", auth.getServiceCategory);
-router.put("/service/updateCategory/:id", [authJwt.verifyToken],upload.single('image'), auth.updateServiceCategory);
+router.put("/service/updateCategory/:id", [authJwt.verifyToken], upload.single('image'), auth.updateServiceCategory);
 router.delete("/service/deleteCategory/:id", [authJwt.verifyToken], auth.removeServiceCategory);
 router.post("/addContactDetails", [authJwt.verifyToken], auth.addContactDetails);
 router.get("/viewContactDetails", auth.viewContactDetails);
@@ -38,4 +38,12 @@ router.post("/Banner/AddBanner", [authJwt.verifyToken], upload.single('image'), 
 router.get("/Banner/allBanner", auth.getBanner);
 router.get("/Banner/getBannerById/:id", auth.getBannerById);
 router.delete("/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
+router.post("/Charges/addCharges", [authJwt.verifyToken], auth.createCharge);
+router.get("/Charges/allCharges", auth.getCharges);
+router.put("/Charges/updateCharges/:id", [authJwt.verifyToken], auth.updateCharge);
+router.delete("/Charges/deleteCharges/:id", [authJwt.verifyToken], auth.removeCharge);
+router.post("/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
+router.get("/FreeService/allFreeService", auth.getFreeServices);
+router.put("/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
+router.delete("/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
 module.exports = router;

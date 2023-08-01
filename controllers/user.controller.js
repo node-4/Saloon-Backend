@@ -242,7 +242,7 @@ exports.getserviceCategory = async (req, res) => {
         res.status(200).json({ status: 200, message: "All Service Category found successfully.", data: categories })
 };
 exports.getVendorbyserviceCategory = async (req, res) => {
-        const categories = await User.find({ serviceCategoryId: { $in: req.params.serviceCategoryId } }).select('address1 address2 servieImages serviceName');
+        const categories = await User.find({ serviceCategoryId: { $in: req.params.serviceCategoryId } }).select('likeUser address1 address2 servieImages serviceName');
         if (categories.length == 0) {
                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
@@ -281,7 +281,7 @@ exports.listStore = async (req, res) => {
 };
 exports.listService = async (req, res) => {
         try {
-                let vendorData = await User.findOne({ _id: req.params.vendorId }).select('address1 address2 servieImages Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName');;
+                let vendorData = await User.findOne({ _id: req.params.vendorId }).select('address1 address2 servieImages likeUser Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName');;
                 if (!vendorData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 }
