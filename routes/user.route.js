@@ -37,6 +37,16 @@ router.get("/listService/:serviceCategoryId/:vendorId", [authJwt.verifyToken], a
 router.get("/getCart", [authJwt.verifyToken], auth.getCart);
 router.post("/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
 router.post("/Cart/addStafftoCart", [authJwt.verifyToken], auth.addStafftoCart);
+router.put("/Cart/provideTip", [authJwt.verifyToken], auth.provideTip);
+router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
+router.put("/Cart/applyCoupan", [authJwt.verifyToken], auth.applyCoupan);
+router.put("/Cart/applyWallet", [authJwt.verifyToken], auth.applyWallet);
+router.put("/Cart/addFreeServiceToCart", [authJwt.verifyToken], auth.addFreeServiceToCart);
+router.put("/Cart/addSuggestionToCart", [authJwt.verifyToken], auth.addSuggestionToCart);
+router.put("/Cart/addAdressToCart/:id", [authJwt.verifyToken], auth.addAdressToCart);
+router.post("/Cart/checkout", [authJwt.verifyToken], auth.checkout);
+router.post("/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
+
 router.post('/wallet/addWallet', [authJwt.verifyToken], auth.addMoney);
 router.post('/wallet/removeWallet', [authJwt.verifyToken], auth.removeMoney);
 router.get('/wallet/getwallet', [authJwt.verifyToken], auth.getWallet);
@@ -49,8 +59,6 @@ router.get("/getAddress", [authJwt.verifyToken], auth.getallAddress);
 router.put("/address/:id", [authJwt.verifyToken], auth.updateAddress)
 router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
 router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
-router.post("/Cart/checkout", [authJwt.verifyToken], auth.checkout);
-router.post("/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
 router.post("/Cart/reOrder/:orderId", [authJwt.verifyToken], auth.reOrder);
 router.post("/Cart/cancelOrder/:orderId", [authJwt.verifyToken], auth.cancelOrder);
 router.get('/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);

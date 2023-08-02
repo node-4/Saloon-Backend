@@ -161,7 +161,6 @@ exports.removeServiceCategory = async (req, res) => {
         return res.status(200).json({ message: "Service Category Deleted Successfully !" });
     }
 };
-
 exports.createCharge = async (req, res) => {
     try {
         let findCharges = await Charges.findOne({ name: req.body.name });
@@ -278,11 +277,6 @@ exports.removeFreeServices = async (req, res) => {
         return res.status(200).json({ message: "freeService Deleted Successfully !" });
     }
 };
-
-
-
-
-
 exports.addContactDetails = async (req, res) => {
     try {
         let findContact = await ContactDetail.findOne();

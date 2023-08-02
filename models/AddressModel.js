@@ -1,25 +1,21 @@
 const mongoose = require("mongoose");
+const schema = mongoose.Schema;
 const addressSchema = new mongoose.Schema({
-  address: {
+  houseFlat: {
     type: String,
   },
-  city: {
+  appartment: {
     type: String,
-  },
-  state: {
-    type: String,
-  },
-  pinCode: {
-    type: Number,
   },
   landMark: {
     type: String,
   },
-  street: {
+  houseType: {
     type: String,
+    enum: ["home", "Other"],
   },
   user: {
-    type: mongoose.Schema.ObjectId,
+    type: schema.Types.ObjectId,
     ref: "user",
   },
 }, { timestamps: true });
