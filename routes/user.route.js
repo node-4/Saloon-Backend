@@ -55,4 +55,6 @@ router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
 router.post('/giveRating/:id/:orderId', authJwt.verifyToken, auth.giveRating);
 router.post("/likeunlike/:id", [authJwt.verifyToken], auth.addLike)
 router.post("/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
+router.get("/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
+router.get("/getFreeServices", [authJwt.verifyToken], auth.getFreeServices);
 module.exports = router;

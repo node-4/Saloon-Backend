@@ -1464,6 +1464,28 @@ exports.AddFeedback = async (req, res) => {
                 return res.status(400).json({ message: err.message })
         }
 }
+exports.listOffer = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "other" }] }] });
+                        if (findService.length == 0) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                res.json({ status: 200, message: 'Offer Data found successfully.', service: findService });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.getFreeServices = async (req, res) => {
+        const findFreeService = await freeService.find({ userId: req.user._id }).populate([{ path: 'userId', select: 'fullName firstName lastName' }, { path: 'serviceId', select: 'name price totalTime timeInMin discountPrice discount discountActive ' }]);
+        return res.status(201).json({ message: "Free Service Found", status: 200, data: findFreeService, });
+};
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let OTP = '';
