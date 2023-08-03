@@ -57,4 +57,10 @@ router.post("/likeunlike/:id", [authJwt.verifyToken], auth.addLike)
 router.post("/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
 router.get("/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
 router.get("/getFreeServices", [authJwt.verifyToken], auth.getFreeServices);
+router.post("/ticket/createTicket", [authJwt.verifyToken], auth.createTicket);
+router.get("/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
+router.get('/ticket/:id', auth.getTicketbyId);
+router.put('/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
+router.post("/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
+router.get("/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
 module.exports = router;

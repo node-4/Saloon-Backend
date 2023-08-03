@@ -49,4 +49,7 @@ router.delete("/E4u/removeE4u/:id", [authJwt.verifyToken], auth.removeE4u);
 router.get("/Feedback/getById/:id", auth.getByIdfeedback);
 router.get("/Feedback/getAllfeedback", auth.getAllfeedback);
 router.delete("/Feedback/DeleteFeedback/:id", [authJwt.verifyToken], auth.DeleteFeedback);
+router.get("/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
+router.put('/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
+router.put('/closeTicket/:id', [authJwt.verifyToken], auth.closeTicket);
 module.exports = router;
