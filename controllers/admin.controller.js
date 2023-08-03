@@ -10,6 +10,10 @@ const banner = require('../models/banner')
 const serviceCategory = require('../models/serviceCategory')
 const Charges = require('../models/Charges');
 const freeService = require('../models/freeService');
+const Brand = require('../models/brand');
+const weCanhelpyou = require('../models/weCanhelpyou');
+const e4u = require('../models/e4u')
+const feedback = require('../models/feedback');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -387,3 +391,223 @@ exports.DeleteBanner = async (req, res) => {
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
+exports.createBrands = async (req, res) => {
+    try {
+        let findBrand = await Brand.findOne({ name: req.body.name });
+        if (findBrand) {
+            return res.status(409).json({ message: "Brand already exit.", status: 404, data: {} });
+        } else {
+            let fileUrl;
+            if (req.file) {
+                fileUrl = req.file ? req.file.path : "";
+            }
+            const data = { name: req.body.name, image: fileUrl };
+            const category = await Brand.create(data);
+            return res.status(200).json({ message: "Brand add successfully.", status: 200, data: category });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getBrands = async (req, res) => {
+    const categories = await Brand.find({});
+    if (categories.length > 0) {
+        return res.status(201).json({ message: "Brand Found", status: 200, data: categories, });
+    }
+    return res.status(201).json({ message: "Brand not Found", status: 404, data: {}, });
+
+};
+exports.updateBrand = async (req, res) => {
+    const { id } = req.params;
+    const category = await Brand.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Brand Not Found", status: 404, data: {} });
+    }
+    let fileUrl;
+    if (req.file) {
+        fileUrl = req.file ? req.file.path : "";
+    }
+    category.image = fileUrl || category.image;
+    category.name = req.body.name || category.name;
+    let update = await category.save();
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeBrand = async (req, res) => {
+    const { id } = req.params;
+    const category = await Brand.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Brand Not Found", status: 404, data: {} });
+    } else {
+        await Brand.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "Brand Deleted Successfully !" });
+    }
+};
+exports.createweCanhelpyou = async (req, res) => {
+    const { question, answer, type } = req.body;
+    try {
+        if (!question || !answer || !type) {
+            return res.status(400).json({ message: "questions, answers and type cannot be blank " });
+        }
+        const findData = await weCanhelpyou.create(req.body);
+        return res.status(200).json({ status: 200, message: "We Can help you Added Successfully ", data: findData });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Error ", status: 500, data: err.message });
+    }
+};
+exports.getAllweCanhelpyou = async (req, res) => {
+    try {
+        const findData = await weCanhelpyou.find({ type: req.params.type }).lean();
+        if (findData.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(200).json({ status: 200, message: "We Can help you retrieved successfully ", data: findData });
+    } catch (err) {
+        console.log(err);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.getweCanhelpyouById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const findData = await weCanhelpyou.findById(id);
+        if (!findData) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(200).json({ status: 200, message: "We Can help you retrieved successfully ", data: findData });
+    } catch (err) {
+        console.log(err);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.updateweCanhelpyou = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { question, answer, type } = req.body;
+        const findData = await weCanhelpyou.findById(id);
+        if (!findData) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        let obj = {
+            question: question || findData.question,
+            answer: answer || findData.answer,
+            type: type || findData.type,
+        }
+        const update = await weCanhelpyou.findByIdAndUpdate(id, { $set: obj }, { new: true });
+        return res.status(200).json({ status: 200, message: "update successfully.", data: update });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Something went wrong ", status: 500, data: err.message });
+    }
+};
+exports.deleteweCanhelpyou = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const findData = await weCanhelpyou.findById(id);
+        if (!findData) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        const faq = await weCanhelpyou.findByIdAndDelete(findData._id);
+        return res.status(200).json({ status: 200, message: "We Can help you Deleted Successfully ", data: faq });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Something went wrong ", status: 500, data: err.message });
+    }
+};
+exports.createE4u = async (req, res) => {
+    try {
+        let findE4U = await e4u.findOne({ title: req.body.title, type: req.body.type });
+        if (findE4U) {
+            return res.status(409).json({ message: "E4u already exit.", status: 404, data: {} });
+        } else {
+            let fileUrl;
+            if (req.file) {
+                fileUrl = req.file ? req.file.path : "";
+            }
+            const data = { title: req.body.title, type: req.body.type, description: req.body.description, image: fileUrl };
+            const saved = await e4u.create(data);
+            return res.status(200).json({ message: "E4u add successfully.", status: 200, data: saved });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getE4uByType = async (req, res) => {
+    const findE4U = await e4u.find({ type: req.params.type });
+    if (findE4U.length == 0) {
+        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+    }
+    return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
+};
+exports.getE4u = async (req, res) => {
+    const findE4U = await e4u.find({});
+    if (findE4U.length == 0) {
+        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+    }
+    return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
+};
+exports.updateE4u = async (req, res) => {
+    const { id } = req.params;
+    const findE4U = await e4u.findById(id);
+    if (!findE4U) {
+        return res.status(404).json({ message: "E4u Not Found", status: 404, data: {} });
+    }
+    let fileUrl;
+    if (req.file) {
+        fileUrl = req.file ? req.file.path : "";
+    }
+    findE4U.title = req.body.title || findE4U.title;
+    findE4U.type = req.body.type || findE4U.type;
+    findE4U.description = req.body.description || findE4U.description;
+    findE4U.image = fileUrl || findE4U.image;
+    let update = await findE4U.save();
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeE4u = async (req, res) => {
+    const { id } = req.params;
+    const category = await e4u.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "E4u Not Found", status: 404, data: {} });
+    } else {
+        await e4u.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "E4u Deleted Successfully !" });
+    }
+};
+exports.getAllfeedback = async (req, res) => {
+    try {
+        const data = await feedback.find().populate('userId');
+        if (data.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "feedback Found", status: 200, data: data, });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Something went wrong ", status: 500, data: err.message });
+    }
+}
+exports.getByIdfeedback = async (req, res) => {
+    try {
+        const data = await feedback.findOne({ _id: req.params.id });
+        if (!data) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "feedback Found", status: 200, data: data, });
+    } catch (err) {
+        console.log(err);
+        return res.status(400).json({ message: err.message })
+    }
+}
+exports.DeleteFeedback = async (req, res) => {
+    try {
+        const category = await feedback.findById(id);
+        if (!category) {
+            return res.status(404).json({ message: "feedback Not Found", status: 404, data: {} });
+        } else {
+            await feedback.findByIdAndDelete(category._id);
+            return res.status(200).json({ message: "feedback Deleted Successfully !" });
+        }
+    } catch (err) {
+        console.log(err)
+        return res.status(400).json({ message: "Deleted " })
+    }
+}

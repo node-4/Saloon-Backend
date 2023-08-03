@@ -18,6 +18,7 @@ const orderRatingModel = require('../models/orderRatingModel');
 const Charges = require('../models/Charges');
 const Coupan = require('../models/Coupan');
 const freeService = require('../models/freeService');
+const feedback = require('../models/feedback');
 exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
@@ -1378,6 +1379,26 @@ exports.placeOrder = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+exports.AddFeedback = async (req, res) => {
+        try {
+                const { type, Feedback, rating } = req.body;
+                if (!type && Feedback && rating) {
+                        return res.status(201).send({ message: "All filds are required" })
+                } else {
+                        let obj = {
+                                userId: req.user._id,
+                                type: type,
+                                Feedback: Feedback,
+                                rating: rating
+                        }
+                        const data = await feedback.create(obj);
+                        return res.status(200).json({ details: data })
+                }
+        } catch (err) {
+                console.log(err);
+                return res.status(400).json({ message: err.message })
+        }
+}
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let OTP = '';

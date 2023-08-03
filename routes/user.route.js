@@ -1,23 +1,7 @@
 const { validateUser } = require("../middlewares");
 const auth = require("../controllers/user.controller");
 const { authJwt, authorizeRoles } = require("../middlewares");
-var multer = require("multer");
-const path = require("path");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
-cloudinary.config({
-    cloud_name: "dbrvq9uxa",
-    api_key: "567113285751718",
-    api_secret: "rjTsz9ksqzlDtsrlOPcTs_-QtW4",
-});
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: "images/image",
-        allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"],
-    },
-});
-const upload = multer({ storage: storage });
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
 const express = require("express");
 const router = express()
 router.post("/registration", [authJwt.verifyToken], auth.registration);
@@ -26,7 +10,7 @@ router.post("/loginWithPhone", auth.loginWithPhone);
 router.post("/:id", auth.verifyOtp);
 router.post("/resendOtp/:id", auth.resendOTP);
 router.get("/getProfile", [authJwt.verifyToken], auth.getProfile);
-router.put("/updateProfile", [authJwt.verifyToken], upload.single('image'), auth.updateProfile);
+router.put("/updateProfile", [authJwt.verifyToken], userProfileUpload.single('image'), auth.updateProfile);
 router.put("/updateLocation", [authJwt.verifyToken], auth.updateLocation);
 router.get("/Category/allCategory", auth.getCategories);
 router.get("/Category/getserviceCategory", auth.getserviceCategory);
@@ -46,7 +30,6 @@ router.put("/Cart/addSuggestionToCart", [authJwt.verifyToken], auth.addSuggestio
 router.put("/Cart/addAdressToCart/:id", [authJwt.verifyToken], auth.addAdressToCart);
 router.post("/Cart/checkout", [authJwt.verifyToken], auth.checkout);
 router.post("/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
-
 router.post('/wallet/addWallet', [authJwt.verifyToken], auth.addMoney);
 router.post('/wallet/removeWallet', [authJwt.verifyToken], auth.removeMoney);
 router.get('/wallet/getwallet', [authJwt.verifyToken], auth.getWallet);
@@ -71,5 +54,5 @@ router.delete('/address/:id', [authJwt.verifyToken], auth.deleteAddress);
 router.get('/address/:id', [authJwt.verifyToken], auth.getAddressbyId);
 router.post('/giveRating/:id/:orderId', authJwt.verifyToken, auth.giveRating);
 router.post("/likeunlike/:id", [authJwt.verifyToken], auth.addLike)
-
+router.post("/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
 module.exports = router;

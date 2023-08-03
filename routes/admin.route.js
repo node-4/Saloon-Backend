@@ -1,24 +1,10 @@
 const auth = require("../controllers/admin.controller");
 const { authJwt } = require("../middlewares");
-var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
-cloudinary.config({
-        cloud_name: "dbrvq9uxa",
-        api_key: "567113285751718",
-        api_secret: "rjTsz9ksqzlDtsrlOPcTs_-QtW4",
-});
-const storage = new CloudinaryStorage({
-        cloudinary: cloudinary,
-        params: {
-                folder: "images/image",
-                allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"],
-        },
-});
-const upload = multer({ storage: storage });
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload } = require('../middlewares/imageUpload')
+
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
 router.put("/update", [authJwt.verifyToken], auth.update);
@@ -26,15 +12,15 @@ router.post("/Category/addCategory", [authJwt.verifyToken], auth.createCategory)
 router.get("/Category/allCategory", auth.getCategories);
 router.put("/Category/updateCategory/:id", [authJwt.verifyToken], auth.updateCategory);
 router.delete("/Category/deleteCategory/:id", [authJwt.verifyToken], auth.removeCategory);
-router.post("/service/addCategory", [authJwt.verifyToken], upload.single('image'), auth.createServiceCategory);
+router.post("/service/addCategory", [authJwt.verifyToken], categoryUpload.single('image'), auth.createServiceCategory);
 router.get("/service/allCategory", auth.getServiceCategory);
-router.put("/service/updateCategory/:id", [authJwt.verifyToken], upload.single('image'), auth.updateServiceCategory);
+router.put("/service/updateCategory/:id", [authJwt.verifyToken], categoryUpload.single('image'), auth.updateServiceCategory);
 router.delete("/service/deleteCategory/:id", [authJwt.verifyToken], auth.removeServiceCategory);
 router.post("/addContactDetails", [authJwt.verifyToken], auth.addContactDetails);
 router.get("/viewContactDetails", auth.viewContactDetails);
 router.post('/createSubscription', auth.createSubscription);
 router.get('/getSubscription', auth.getSubscription);
-router.post("/Banner/AddBanner", [authJwt.verifyToken], upload.single('image'), auth.AddBanner);
+router.post("/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
 router.get("/Banner/allBanner", auth.getBanner);
 router.get("/Banner/getBannerById/:id", auth.getBannerById);
 router.delete("/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
@@ -46,4 +32,21 @@ router.post("/FreeService/addFreeService", [authJwt.verifyToken], auth.createFre
 router.get("/FreeService/allFreeService", auth.getFreeServices);
 router.put("/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
 router.delete("/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
+router.post("/Brand/addBrand", [authJwt.verifyToken], BrandUpload.single('image'), auth.createBrands);
+router.get("/Brand/allBrand", auth.getBrands);
+router.put("/Brand/updateBrand/:id", [authJwt.verifyToken], BrandUpload.single('image'), auth.updateBrand);
+router.delete("/Brand/deleteBrand/:id", [authJwt.verifyToken], auth.removeBrand);
+router.post("/weCanhelpyou/createweCanhelpyou", [authJwt.verifyToken], auth.createweCanhelpyou);
+router.get("/weCanhelpyou/getAllweCanhelpyou/:type", auth.getAllweCanhelpyou);
+router.get("/weCanhelpyou/getweCanhelpyouById/:id", auth.getweCanhelpyouById);
+router.put("/weCanhelpyou/updateweCanhelpyou/:id", [authJwt.verifyToken], auth.updateweCanhelpyou);
+router.delete("/weCanhelpyou/deleteweCanhelpyou/:id", [authJwt.verifyToken], auth.deleteweCanhelpyou);
+router.post("/E4u/createE4u", [authJwt.verifyToken], E4UUpload.single('image'), auth.createE4u);
+router.get("/E4u/getE4uByType/:type", auth.getE4uByType);
+router.get("/E4u/getE4u", auth.getE4u);
+router.put("/E4u/updateE4u/:id", [authJwt.verifyToken], E4UUpload.single('image'), auth.updateE4u);
+router.delete("/E4u/removeE4u/:id", [authJwt.verifyToken], auth.removeE4u);
+router.get("/Feedback/getById/:id", auth.getByIdfeedback);
+router.get("/Feedback/getAllfeedback", auth.getAllfeedback);
+router.delete("/Feedback/DeleteFeedback/:id", [authJwt.verifyToken], auth.DeleteFeedback);
 module.exports = router;
