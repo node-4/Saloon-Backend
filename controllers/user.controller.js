@@ -1433,7 +1433,7 @@ exports.placeOrder = async (req, res) => {
                 let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });
                 if (findUserOrder) {
                         if (req.body.paymentStatus == "paid") {
-                                let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", paymentStatus: "paid" } }, { new: true });
+                                let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", status: "confirmed", paymentStatus: "paid" } }, { new: true });
                                 return res.status(200).json({ message: "Payment success.", status: 200, data: update });
                         }
                         if (req.body.paymentStatus == "failed") {
