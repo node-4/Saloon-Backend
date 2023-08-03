@@ -25,7 +25,7 @@ exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
                 if (user) {
-                        if (req.body.refferalCode == null || req.body.refferalCode == undefined) {
+                        if (req.body.refferalCode == null || req.body.refferalCode == undefined || req.body.refferalCode == "") {
                                 req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
                                 req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
                                 req.body.accountVerification = false;
