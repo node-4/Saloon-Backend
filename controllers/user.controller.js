@@ -849,7 +849,72 @@ exports.addToCart = async (req, res) => {
                                 } else {
                                         const obj = findCart.services.find((user) => { return (user.serviceId).toString() === req.body._id });
                                         if (obj) {
-                                                return res.status(409).json({ status: 409, message: "Service already add to cart.", data: findCart })
+                                                let Charged = [], services = [], totalAmount = 0, paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, tipProvided = 0;
+                                                const findCharge = await Charges.find({});
+                                                if (findCharge.length > 0) {
+                                                        for (let i = 0; i < findCharge.length; i++) {
+                                                                let obj1 = {
+                                                                        chargeId: findCharge[i]._id,
+                                                                        charge: findCharge[i].charge,
+                                                                        discountCharge: findCharge[i].discountCharge,
+                                                                        discount: findCharge[i].discount,
+                                                                        cancelation: findCharge[i].cancelation,
+                                                                }
+                                                                if (findCharge[i].cancelation == false) {
+                                                                        if (findCharge[i].discount == true) {
+                                                                                additionalFee = additionalFee + findCharge[i].discountCharge
+                                                                        } else {
+                                                                                additionalFee = additionalFee + findCharge[i].charge
+                                                                        }
+                                                                }
+                                                                Charged.push(obj1)
+                                                        }
+                                                }
+                                                if (findCart.coupanUsed == true) {
+                                                        let findCoupan = await Coupan.findById({ _id: findCart.coupanId });
+                                                        coupan = findCoupan.discount;
+                                                } else {
+                                                        coupan = 0
+                                                }
+                                                if (findCart.walletUsed == true) {
+                                                        wallet = userData.wallet;
+                                                } else {
+                                                        wallet = 0
+                                                }
+                                                if (findCart.tip == true) {
+                                                        tipProvided = findCart.tipProvided
+                                                } else {
+                                                        tipProvided = 0;
+                                                }
+                                                if (findCart.services.length > 1) {
+                                                        for (let i = 0; i < findCart.services.length; i++) {
+                                                                if ((findCart.services[i].serviceId).toString() != req.body._id) {
+                                                                        let findService = await service.findById({ _id: findCart.services[i].serviceId });
+                                                                        if (findService) {
+                                                                                let total = findService.price * findCart.services[i].quantity;
+                                                                                let obj = {
+                                                                                        serviceId: findService._id,
+                                                                                        price: findService.price,
+                                                                                        quantity: req.body.quantity,
+                                                                                        total: total,
+                                                                                }
+                                                                                services.push(obj)
+                                                                        }
+                                                                }
+                                                        }
+                                                        let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { services: services } }, { new: true });
+                                                        if (update) {
+                                                                for (let j = 0; j < update.services.length; j++) {
+                                                                        totalAmount = totalAmount + update.services[j].total
+                                                                }
+                                                                paidAmount = totalAmount + additionalFee + tipProvided - wallet - coupan;
+                                                                let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
+                                                                return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
+                                                        }
+                                                } else {
+                                                        let update1 = await Cart.findByIdAndDelete({ _id: findCart._id });
+                                                        return res.status(200).json({ status: 200, message: "Cart is empty.", data: update1 })
+                                                }
                                         } else {
                                                 let findService = await service.findById({ _id: req.body._id });
                                                 if (findService) {
