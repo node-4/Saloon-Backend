@@ -583,7 +583,7 @@ exports.cancelOrder = async (req, res) => {
 };
 exports.getOngoingOrders = async (req, res) => {
         try {
-                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Pending" });
+                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Pending" }).populate("services.serviceId").populate({ path: 'services.serviceId', populate: { path: 'serviceCategoryId', model: 'serviceCategory', select: "name" }, });
                 if (data.length > 0) {
                         return res.status(200).json({ message: "All orders", data: data });
                 } else {
@@ -596,7 +596,7 @@ exports.getOngoingOrders = async (req, res) => {
 };
 exports.getCompleteOrders = async (req, res) => {
         try {
-                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Complete" });
+                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Complete" }).populate("services.serviceId").populate({ path: 'services.serviceId', populate: { path: 'serviceCategoryId', model: 'serviceCategory', select: "name" }, });
                 if (data.length > 0) {
                         return res.status(200).json({ message: "All orders", data: data });
                 } else {
@@ -609,7 +609,7 @@ exports.getCompleteOrders = async (req, res) => {
 };
 exports.getOrder = async (req, res) => {
         try {
-                const data = await orderModel.findById({ _id: req.params.id });
+                const data = await orderModel.findById({ _id: req.params.id }).populate("services.serviceId").populate({ path: 'services.serviceId', populate: { path: 'serviceCategoryId', model: 'serviceCategory', select: "name" }, });
                 if (data) {
                         return res.status(200).json({ message: "view order", data: data });
                 } else {
