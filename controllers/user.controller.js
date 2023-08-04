@@ -911,7 +911,7 @@ exports.addToCart = async (req, res) => {
                                                                 }
                                                                 paidAmount = totalAmount + additionalFee + tipProvided - wallet - coupan;
                                                                 let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
-                                                                return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
+                                                                return res.status(200).json({ status: 200, message: "Service remove from cart Successfully.", data: update1 })
                                                         }
                                                 } else {
                                                         let update1 = await Cart.findByIdAndDelete({ _id: findCart._id });
