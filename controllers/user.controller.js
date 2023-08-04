@@ -1612,6 +1612,26 @@ exports.listFavouriteBooking = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.joinAsPartner = async (req, res) => {
+        try {
+                const { phone } = req.body;
+                const user = await User.findOne({ phone: phone, userType: "VENDOR" });
+                if (!user) {
+                        req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
+                        req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        req.body.accountVerification = false;
+                        req.body.userType = "VENDOR";
+                        req.body.booking = 3;
+                        const userCreate = await User.create(req.body);
+                        return res.status(200).send({ status: 200, message: "Registered successfully ", data: userCreate, });
+                } else {
+                        return res.status(409).send({ status: 409, msg: "Already Exit" });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Server error" });
+        }
+};
 const reffralCode = async () => {
         var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let OTP = '';

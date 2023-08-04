@@ -5,6 +5,7 @@ const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUploa
 const express = require("express");
 const router = express()
 router.post("/registration", [authJwt.verifyToken], auth.registration);
+router.post("/joinAsPartner", auth.joinAsPartner);
 router.post("/socialLogin", auth.socialLogin);
 router.post("/loginWithPhone", auth.loginWithPhone);
 router.post("/:id", auth.verifyOtp);
