@@ -52,4 +52,9 @@ router.delete("/Feedback/DeleteFeedback/:id", [authJwt.verifyToken], auth.Delete
 router.get("/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
 router.put('/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
 router.put('/closeTicket/:id', [authJwt.verifyToken], auth.closeTicket);
+router.post("/State/createState", auth.createState);
+router.get("/city/listCity", auth.listCity);
+router.put('/city/activeBlockCity/:id', [authJwt.verifyToken], auth.activeBlockCity);
+router.post("/city/addcityArea", auth.addcityArea);
+router.get("/city/listCityArea/:city", auth.listCityArea);
 module.exports = router;

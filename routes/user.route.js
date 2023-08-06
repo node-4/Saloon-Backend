@@ -1,5 +1,6 @@
 const { validateUser } = require("../middlewares");
 const auth = require("../controllers/user.controller");
+const admin = require("../controllers/admin.controller");
 const { authJwt, authorizeRoles } = require("../middlewares");
 const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
 const express = require("express");
@@ -64,4 +65,7 @@ router.get('/ticket/:id', auth.getTicketbyId);
 router.put('/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
 router.post("/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
 router.get("/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
+router.get("/city/listCity", auth.listCity);
+router.get("/city/listCityArea/:city", admin.listCityArea);
+router.get("/listService/listServiceforSearch", auth.listServiceforSearch);
 module.exports = router;

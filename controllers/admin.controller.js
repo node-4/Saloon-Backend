@@ -15,6 +15,9 @@ const weCanhelpyou = require('../models/weCanhelpyou');
 const e4u = require('../models/e4u')
 const feedback = require('../models/feedback');
 const ticket = require('../models/ticket');
+const state = require('../models/state');
+const cityModel = require('../models/city');
+const cityArea = require('../models/cityArea');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -672,5 +675,93 @@ exports.closeTicket = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.createState = async (req, res) => {
+    try {
+        for (let i = 0; i < req.body.state.length; i++) {
+            let findState = await state.findOne(req.body.state[i])
+            if (!findState) {
+                const category = await state.create(req.body.state[i]);
+            }
+        }
+        return res.status(200).json({ message: "state add successfully.", status: 200, data: {} });
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.listCity = async (req, res) => {
+    try {
+        let findCity = await cityModel.find({});
+        if (findCity.length == 0) {
+            return res.status(404).send({ status: 404, message: "Data not found" });
+        } else {
+            res.json({ status: 200, message: 'city Data found successfully.', data: findCity });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.activeBlockCity = async (req, res) => {
+    try {
+        let result = await cityModel.findOne({ _id: req.body._id });
+        if (!result) {
+            response(res, ErrorCode.NOT_FOUND, {}, ErrorMessage.NOT_FOUND);
+        }
+        else {
+            if (result.status == "ACTIVE") {
+                let updateResult = await cityModel.findOneAndUpdate({ _id: result._id }, { $set: { status: "BLOCKED" } }, { new: true });
+                if (updateResult) {
+                    response(res, SuccessCode.SUCCESS, updateResult, SuccessMessage.BLOCK_SUCCESS);
+                }
+            } else if (result.status == "BLOCKED") {
+                let updateResult = await cityModel.findOneAndUpdate({ _id: result._id }, { $set: { status: "ACTIVE" } }, { new: true });
+                if (updateResult) {
+                    response(res, SuccessCode.SUCCESS, updateResult, SuccessMessage.UNBLOCK_SUCCESS);
+                }
+            }
+        }
+
+    } catch (error) {
+        response(res, ErrorCode.WENT_WRONG, {}, ErrorMessage.SOMETHING_WRONG);
+    }
+};
+exports.addcityArea = async (req, res) => {
+    try {
+        let findCity = await cityModel.findOne({ _id: req.body.city });
+        if (!findCity) {
+            return res.status(404).send({ status: 404, message: "Data not found" });
+        } else {
+            let findE4U = await cityArea.findOne({ city: findCity._id, area: req.body.area });
+            if (findE4U) {
+                return res.status(409).json({ message: "cityArea already exit.", status: 404, data: {} });
+            } else {
+                let saveStore = await cityArea(req.body).save();
+                if (saveStore) {
+                    res.json({ status: 200, message: 'cityArea add successfully.', data: saveStore });
+                }
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.listCityArea = async (req, res) => {
+    try {
+        let findCity = await cityModel.findById({ _id: req.params.city });
+        if (findCity.length == 0) {
+            return res.status(404).send({ status: 404, message: "Data not found" });
+        }
+        let findcityArea = await cityArea.find({ city: findCity._id });
+        if (findcityArea.length == 0) {
+            return res.status(404).send({ status: 404, message: "Data not found" });
+        } else {
+            res.json({ status: 200, message: 'City Area Data found successfully.', data: { totalSector: findcityArea.length, city: findCity.cityName, area: findcityArea } });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
     }
 };

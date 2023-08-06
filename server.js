@@ -17,7 +17,10 @@ if (process.env.NODE_ENV == "production") {
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
-require('./controllers/SubscriptionCronjob');
+// require('./controllers/SubscriptionCronjob');
+// require('./controllers/cronjob/cityBlockCron');s
+// require('./controllers/cronjob/cityCron');
+// require('./controllers/cronjob/sectorCron');
 const user = require('./routes/user.route');
 const admin = require('./routes/admin.route');
 const static = require('./routes/static.route');

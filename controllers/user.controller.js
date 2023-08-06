@@ -21,6 +21,7 @@ const freeService = require('../models/freeService');
 const feedback = require('../models/feedback');
 const ticket = require('../models/ticket');
 const favouriteBooking = require('../models/favouriteBooking');
+const cityModel = require('../models/city');
 exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
@@ -1630,6 +1631,62 @@ exports.joinAsPartner = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ message: "Server error" });
+        }
+};
+exports.listCity = async (req, res) => {
+        try {
+                let findCity = await cityModel.find({ status: "ACTIVE" });
+                if (findCity.length == 0) {
+                        return res.status(404).send({ status: 404, message: "Data not found" });
+                } else {
+                        res.json({ status: 200, message: 'city Data found successfully.', data: findCity });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.listServiceforSearch = async (req, res, next) => {
+        try {
+                const productsCount = await service.count();
+                if (req.query.search != (null || undefined)) {
+                        let data1 = [
+                                {
+                                        $lookup: { from: "users", localField: "vendorId", foreignField: "_id", as: "vendorId" },
+                                },
+                                { $unwind: "$vendorId" },
+                                {
+                                        $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategoryId", },
+                                },
+                                { $unwind: "$serviceCategoryId" },
+                                {
+                                        $match: {
+                                                $or: [
+                                                        { "vendorId.fullName": { $regex: req.query.search, $options: "i" }, },
+                                                        { "vendorId.firstName": { $regex: req.query.search, $options: "i" }, },
+                                                        { "vendorId.lastName": { $regex: req.query.search, $options: "i" }, },
+                                                        { "serviceCategoryId.name": { $regex: req.query.search, $options: "i" }, },
+                                                        { "name": { $regex: req.query.search, $options: "i" }, },
+                                                ]
+                                        }
+                                },
+                        ]
+                        let apiFeature = await service.aggregate(data1);
+                        await service.populate(apiFeature, [{ path: 'vendorId' , select:'address1 address2 servieImages likeUser Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName'}])
+                        return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
+                } else {
+                        let apiFeature = await service.aggregate([
+                                { $lookup: { from: "users", localField: "vendorId", foreignField: "_id", as: "vendorId" } },
+                                { $unwind: "$vendorId" },
+                                { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategoryId", }, },
+                                { $unwind: "$serviceCategoryId" },
+                        ]);
+                        await service.populate(apiFeature, [{ path: 'vendorId' , select:'address1 address2 servieImages likeUser Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName'}])
+                        return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
+                }
+        } catch (err) {
+                console.log(err);
+                return res.status(500).send({ message: "Internal server error while creating Product", });
         }
 };
 const reffralCode = async () => {
