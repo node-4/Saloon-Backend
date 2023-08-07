@@ -346,13 +346,27 @@ exports.getSubscription = async (req, res) => {
 };
 exports.AddBanner = async (req, res) => {
     try {
-        let fileUrl;
-        if (req.file) {
-            fileUrl = req.file ? req.file.path : "";
+        if (req.params.position == "BOTTOM") {
+            const Banner = await banner.findOne({ position: req.params.position });
+            if (!Banner) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+            let fileUrl;
+            if (req.file) {
+                fileUrl = req.file ? req.file.path : "";
+            }
+            const data = { image: fileUrl || Banner.image, desc: req.body.desc || Banner.desc, position: req.body.position || Banner.position }
+            let update = await banner.findByIdAndUpdate({ _id: Banner._id }, { $set: data }, { new: true })
+            return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: update })
+        } else {
+            let fileUrl;
+            if (req.file) {
+                fileUrl = req.file ? req.file.path : "";
+            }
+            const data = { image: fileUrl, desc: req.body.desc, position: req.body.position }
+            const Data = await banner.create(data);
+            return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
         }
-        const data = { image: fileUrl, desc: req.body.desc, position: req.body.position }
-        const Data = await banner.create(data);
-        return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
     } catch (err) {
         console.log(err);
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });

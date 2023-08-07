@@ -851,8 +851,8 @@ exports.addLike = async (req, res) => {
 //                                                 return res.status(404).send({ status: 404, message: "Service not found" });
 //                                         }
 //                                 } else {
-//                                         const obj = findCart.services.find((user) => { return (user.serviceId).toString() === req.body._id });
-//                                         if (obj) {
+//                                        const obj = findCart.services.find((user) => { return (user.serviceId).toString() === req.body._id });
+//                                         if (obj) { 
 //                                                 let Charged = [], services = [], totalAmount = 0, paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, tipProvided = 0;
 //                                                 const findCharge = await Charges.find({});
 //                                                 if (findCharge.length > 0) {
@@ -1773,7 +1773,7 @@ exports.addToCart = async (req, res) => {
                                         }
                                 }
                                 else {
-                                        let Charged = [], services = [], totalAmount = 0, paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, tipProvided = 0;
+                                        let Charged = [], services = [], additionalFee = 0, coupan = 0, wallet = 0, tipProvided = 0;
                                         const findCharge = await Charges.find({});
                                         if (findCharge.length > 0) {
                                                 for (let i = 0; i < findCharge.length; i++) {
@@ -1813,6 +1813,7 @@ exports.addToCart = async (req, res) => {
                                         for (let l = 0; l < req.body.serviceArray.length; l++) {
                                                 let findService = await service.findById({ _id: req.body.serviceArray[l] });
                                                 if (findService) {
+                                                        let totalAmount = 0;
                                                         totalAmount = totalAmount + (findService.price * 1);
                                                         let obj = {
                                                                 serviceId: findService._id,
@@ -1823,7 +1824,6 @@ exports.addToCart = async (req, res) => {
                                                         services.push(obj)
                                                 }
                                         }
-                                        paidAmount = totalAmount + additionalFee;
                                         if (findCart.coupanUsed == true) {
                                                 let findCoupan = await Coupan.findById({ _id: findCart.coupanId });
                                                 coupan = findCoupan.discount;
@@ -1842,11 +1842,20 @@ exports.addToCart = async (req, res) => {
                                         }
                                         let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { services: services } }, { new: true });
                                         if (update) {
+                                                let totalAmount1 = 0, paidAmount = 0;
                                                 for (let j = 0; j < update.services.length; j++) {
-                                                        totalAmount = totalAmount + update.services[j].total
+                                                        totalAmount1 = totalAmount1 + update.services[j].total
                                                 }
-                                                paidAmount = totalAmount + additionalFee + tipProvided - wallet - coupan;
-                                                let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
+                                                paidAmount = totalAmount1 + additionalFee + tipProvided - coupan;
+                                                if (wallet > paidAmount) {
+                                                        wallet = paidAmount;
+                                                        paidAmount = 0;
+
+                                                } else {
+                                                        wallet = 0;
+                                                        paidAmount = paidAmount - wallet;
+                                                }
+                                                let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { wallet: wallet, Charges: Charged, totalAmount: totalAmount1, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
                                                 return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
                                         }
                                 }
@@ -1916,12 +1925,77 @@ exports.updateQuantity = async (req, res) => {
                 } else {
                         let findCart = await Cart.findOne({ userId: userData._id });
                         if (findCart) {
-                                console.log(findCart);
-                                for (let i = 0; i < findCart.services.length; i++) {
-                                        const element = array[i];
-                                        
+                                let services = [], Charged = [], additionalFee = 0, coupan = 0;
+                                const findCharge = await Charges.find({});
+                                if (findCharge.length > 0) {
+                                        for (let i = 0; i < findCharge.length; i++) {
+                                                let obj1 = { chargeId: findCharge[i]._id, charge: findCharge[i].charge, discountCharge: findCharge[i].discountCharge, discount: findCharge[i].discount, cancelation: findCharge[i].cancelation, }
+                                                if (findCharge[i].cancelation == false) { if (findCharge[i].discount == true) { additionalFee = additionalFee + findCharge[i].discountCharge } else { additionalFee = additionalFee + findCharge[i].charge } }
+                                                Charged.push(obj1)
+                                        }
                                 }
-                
+                                if (findCart.coupanUsed == true) { let findCoupan = await Coupan.findById({ _id: findCart.coupanId }); coupan = findCoupan.discount; } else { coupan = 0 }
+                                if (findCart.walletUsed == true) { wallet = userData.wallet; } else { wallet = 0 }
+                                if (findCart.tip == true) { tipProvided = findCart.tipProvided } else { tipProvided = 0; }
+                                let on = [], off = [];
+                                const obj = findCart.services.find((user) => {
+                                        if (((user.serviceId).toString() === req.params.id) == true) {
+                                                on.push(user)
+                                        }
+                                        if (((user.serviceId).toString() === req.params.id) == false) {
+                                                off.push(user)
+                                        }
+                                });
+                                if (on) {
+                                        for (let k = 0; k < on.length; k++) {
+                                                let totalAmount = 0;
+                                                let findService = await service.findById({ _id: on[k].serviceId });
+                                                if (findService) {
+                                                        totalAmount = totalAmount + (findService.price * req.body.quantity);
+                                                        let obj = {
+                                                                serviceId: findService._id,
+                                                                price: findService.price,
+                                                                quantity: req.body.quantity,
+                                                                total: totalAmount,
+                                                        }
+                                                        services.push(obj)
+                                                }
+                                        }
+                                }
+                                if (off) {
+                                        for (let k = 0; k < off.length; k++) {
+                                                let totalAmount = 0;
+                                                let findService = await service.findById({ _id: off[k].serviceId });
+                                                if (findService) {
+                                                        totalAmount = totalAmount + (findService.price * off[k].quantity);
+                                                        let obj = {
+                                                                serviceId: findService._id,
+                                                                price: findService.price,
+                                                                quantity: off[k].quantity,
+                                                                total: totalAmount,
+                                                        }
+                                                        services.push(obj)
+                                                }
+                                        }
+                                }
+                                console.log(services);
+                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { services: services } }, { new: true });
+                                if (update) {
+                                        let totalAmount = 0, paidAmount = 0;
+                                        for (let j = 0; j < update.services.length; j++) {
+                                                totalAmount = totalAmount + update.services[j].total
+                                        }
+                                        paidAmount = totalAmount + additionalFee + tipProvided - coupan;
+                                        if (wallet > paidAmount) {
+                                                wallet = paidAmount;
+                                                paidAmount = 0;
+                                        } else {
+                                                wallet = 0;
+                                                paidAmount = paidAmount - wallet;
+                                        }
+                                        let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { wallet: wallet, Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
+                                        return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
+                                }
                         } else {
                                 return res.status(404).send({ status: 404, message: "Cart not found" });
                         }
