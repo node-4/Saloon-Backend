@@ -13,7 +13,7 @@ const brandSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ["STANDARD", "PROMISE"],
+        enum: ["STANDARD", "PROMISE", "FR"],
     },
 }, { timestamps: true });
 
