@@ -350,7 +350,7 @@ exports.AddBanner = async (req, res) => {
         if (req.file) {
             fileUrl = req.file ? req.file.path : "";
         }
-        const data = { image: fileUrl, desc: req.body.desc }
+        const data = { image: fileUrl, desc: req.body.desc, position: req.body.position }
         const Data = await banner.create(data);
         return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
     } catch (err) {
@@ -360,7 +360,7 @@ exports.AddBanner = async (req, res) => {
 };
 exports.getBanner = async (req, res) => {
     try {
-        const Banner = await banner.find();
+        const Banner = await banner.find({ position: req.params.position });
         if (Banner.length == 0) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
