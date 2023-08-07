@@ -360,9 +360,9 @@ exports.AddBanner = async (req, res) => {
 };
 exports.getBanner = async (req, res) => {
     try {
-        if (req.params.position != (null || undefined)) {
-            const Banner = await banner.find({ position: req.params.position });
-            if (Banner.length == 0) {
+        if (req.params.position == "BOTTOM") {
+            const Banner = await banner.findOne({ position: req.params.position });
+            if (!Banner) {
                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
             }
             return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
