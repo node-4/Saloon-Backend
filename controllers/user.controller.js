@@ -1727,7 +1727,7 @@ exports.addToCart = async (req, res) => {
                                                                 serviceId: findService._id,
                                                                 price: findService.price,
                                                                 quantity: 1,
-                                                                total: total,
+                                                                total: totalAmount,
                                                         }
                                                         services.push(obj)
                                                 }
@@ -1758,7 +1758,7 @@ exports.addToCart = async (req, res) => {
                                                 let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
                                                 return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
                                         }
-                                } 
+                                }
                                 else {
                                         let Charged = [], services = [], totalAmount = 0, paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, tipProvided = 0;
                                         const findCharge = await Charges.find({});
@@ -1805,7 +1805,7 @@ exports.addToCart = async (req, res) => {
                                                                 serviceId: findService._id,
                                                                 price: findService.price,
                                                                 quantity: 1,
-                                                                total: total,
+                                                                total: totalAmount,
                                                         }
                                                         services.push(obj)
                                                 }
