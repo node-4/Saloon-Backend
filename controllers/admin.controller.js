@@ -360,14 +360,14 @@ exports.AddBanner = async (req, res) => {
 };
 exports.getBanner = async (req, res) => {
     try {
-        if(req.params.position!=(null|| undefined)){
+        if (req.params.position != (null || undefined)) {
             const Banner = await banner.find({ position: req.params.position });
             if (Banner.length == 0) {
                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
             }
             return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
-        }else{
-            const Banner = await banner.find({ });
+        } else {
+            const Banner = await banner.find({});
             if (Banner.length == 0) {
                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
             }
@@ -545,11 +545,19 @@ exports.createE4u = async (req, res) => {
     }
 };
 exports.getE4uByType = async (req, res) => {
-    const findE4U = await e4u.find({ type: req.params.type });
-    if (findE4U.length == 0) {
-        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+    if (req.params.type == "FR") {
+        const findE4U = await e4u.findOne({ type: req.params.type });
+        if (findE4U) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
+    } else {
+        const findE4U = await e4u.find({ type: req.params.type });
+        if (findE4U.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
     }
-    return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
 };
 exports.getE4u = async (req, res) => {
     const findE4U = await e4u.find({});

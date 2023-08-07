@@ -30,6 +30,7 @@ router.put("/Cart/applyWallet", [authJwt.verifyToken], auth.applyWallet);
 router.put("/Cart/addFreeServiceToCart", [authJwt.verifyToken], auth.addFreeServiceToCart);
 router.put("/Cart/addSuggestionToCart", [authJwt.verifyToken], auth.addSuggestionToCart);
 router.put("/Cart/addAdressToCart/:id", [authJwt.verifyToken], auth.addAdressToCart);
+router.put("/Cart/updateQuantity/:id", [authJwt.verifyToken], auth.updateQuantity);
 router.post("/Cart/checkout", [authJwt.verifyToken], auth.checkout);
 router.post("/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
 router.post('/wallet/addWallet', [authJwt.verifyToken], auth.addMoney);
