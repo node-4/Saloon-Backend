@@ -547,7 +547,7 @@ exports.createE4u = async (req, res) => {
 exports.getE4uByType = async (req, res) => {
     if (req.params.type == "FR") {
         const findE4U = await e4u.findOne({ type: req.params.type });
-        if (findE4U) {
+        if (!findE4U) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
         return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
