@@ -22,6 +22,7 @@ router.post('/createSubscription', auth.createSubscription);
 router.get('/getSubscription', auth.getSubscription);
 router.post("/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
 router.get("/Banner/allBanner/:position", auth.getBanner);
+router.get("/Banner/allBanner", auth.getBanner);
 router.get("/Banner/getBannerById/:id", auth.getBannerById);
 router.delete("/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
 router.post("/Charges/addCharges", [authJwt.verifyToken], auth.createCharge);

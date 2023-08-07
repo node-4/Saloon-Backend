@@ -1245,7 +1245,7 @@ exports.applyWallet = async (req, res) => {
                                 if (findCart.services.length == 0) {
                                         return res.status(404).json({ status: 404, message: "First add service in your cart.", data: {} });
                                 } else {
-                                        let Charged = [], paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, walletUsed;
+                                        let Charged = [], paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, walletUsed,userWallet;
                                         const findCharge = await Charges.find({});
                                         if (findCharge.length > 0) {
                                                 for (let i = 0; i < findCharge.length; i++) {
@@ -1283,9 +1283,19 @@ exports.applyWallet = async (req, res) => {
                                         } else {
                                                 tipProvided = 0;
                                         }
-                                        paidAmount = findCart.totalAmount + additionalFee + tipProvided - wallet - coupan;
-                                        let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Charges: Charged, tip: findCart.tip, tipProvided: tipProvided, walletUsed: walletUsed, coupanUsed: findCart.coupanUsed, freeServiceUsed: findCart.freeServiceUsed, wallet: wallet, coupan: coupan, freeService: findCart.freeService, totalAmount: findCart.totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: findCart.totalItem } }, { new: true });
-                                        return res.status(200).json({ status: 200, message: "wallet apply on cart Successfully.", data: update1 })
+                                        paidAmount = findCart.totalAmount + additionalFee + tipProvided - coupan;
+                                        if (wallet > paidAmount) {
+                                                userWallet = wallet - paidAmount;
+                                                wallet = paidAmount;
+                                                paidAmount = 0;
+
+                                        } else {
+                                                paidAmount = paidAmount - wallet;
+                                        }
+                                        let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Charges: Charged, tip: findCart.tip, tipProvided: tipProvided, walletUsed: walletUsed, coupanUsed: findCart.coupanUsed, freeServiceUsed: findCart.freeServiceUsed,wallet: wallet, coupan: coupan, freeService: findCart.freeService, totalAmount: findCart.totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: findCart.totalItem } }, { new: true });
+                                        if(update1){
+                                                return res.status(200).json({ status: 200, message: "wallet apply on cart Successfully.", data: update1 })
+                                        }
                                 }
                         } else {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
@@ -1889,6 +1899,25 @@ exports.addToCart = async (req, res) => {
                                 }
                                 const Data = await Cart.create(obj1);
                                 return res.status(200).json({ status: 200, message: "Service successfully add to cart. ", data: Data })
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+//////////////////////////////////////////////////////////
+exports.updateQuantity = async (req, res) => {
+        try {
+                let userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findCart = await Cart.findOne({ userId: userData._id });
+                        if (findCart) {
+
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Cart not found" });
                         }
                 }
         } catch (error) {

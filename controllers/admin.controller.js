@@ -360,11 +360,19 @@ exports.AddBanner = async (req, res) => {
 };
 exports.getBanner = async (req, res) => {
     try {
-        const Banner = await banner.find({ position: req.params.position });
-        if (Banner.length == 0) {
-            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        if(req.params.position!=(null|| undefined)){
+            const Banner = await banner.find({ position: req.params.position });
+            if (Banner.length == 0) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+            return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+        }else{
+            const Banner = await banner.find({ });
+            if (Banner.length == 0) {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+            return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
         }
-        return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
     } catch (err) {
         console.log(err);
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
