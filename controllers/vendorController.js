@@ -532,6 +532,81 @@ exports.addService = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.editService = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await service.findById({ _id: req.params.id })
+                        if (findService) {
+                                if (req.body.serviceCategoryId != (null || undefined)) {
+                                        let findStore = await serviceCategory.findOne({ _id: req.body.serviceCategoryId });
+                                        if (!findStore) {
+                                                return res.status(404).send({ status: 404, message: "Data not found" });
+                                        }
+                                }
+                                let obj = {
+                                        vendorId: vendorData._id || findService.vendorId,
+                                        serviceCategoryId: req.body.serviceCategoryId || findService.serviceCategoryId,
+                                        name: req.body.name || findService.name,
+                                        toHr: req.body.toHr || findService.toHr,
+                                        fromHr: req.body.fromHr || findService.fromHr,
+                                        price: req.body.price || findService.price,
+                                        useBy: req.body.useBy || findService.useBy,
+                                }
+                                let saveStore = await service.findByIdAndUpdate({ _id: findService._id }, { $set: obj }, { new: true })
+                                if (saveStore) {
+                                        res.json({ status: 200, message: 'Service update successfully.', data: saveStore });
+                                }
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.getService = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await service.findById({ _id: req.params.id })
+                        if (findService) {
+                                res.json({ status: 200, message: 'Service found successfully.', data: findService });
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.deleteService = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await service.findById({ _id: req.params.id })
+                        if (findService) {
+                                let saveStore = await service.findByIdAndDelete({ _id: findService._id })
+                                if (saveStore) {
+                                        res.json({ status: 200, message: 'Service Delete successfully.', data: {} });
+                                }
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 exports.listService = async (req, res) => {
         try {
                 let vendorData = await User.findOne({ _id: req.user._id });
@@ -733,7 +808,6 @@ exports.getOrders = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
-
 exports.updateServiceImages = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id, });
