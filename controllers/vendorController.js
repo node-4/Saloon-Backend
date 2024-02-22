@@ -15,6 +15,7 @@ const rating = require('../models/ratingModel');
 const orderModel = require('../models/orderModel');
 const orderRatingModel = require('../models/orderRatingModel');
 const moment = require('moment');
+const slot = require('../models/slot');
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
@@ -860,7 +861,280 @@ const reffralCode = async () => {
 
 
 
+exports.createSlot = async (req, res) => {
+        try {
+                const staff = await User.findOne({ _id: req.body.staffId, userType: "STAFF" });
+                if (!staff) {
+                        return res.status(404).json({ message: "Staff Not Found", status: 404 });
+                } else {
+                        let findSlot = await generateSlots(req.body.startDate, staff._id, staff.vendorId)
+                        return res.status(200).json({ message: "Slots added successfully.", status: 200, data: findSlot, });
+                }
+        } catch (error) {
+                return res.status(500).json({ status: 500, message: "Internal server error ", data: error.message, });
+        }
+};
 
+exports.createSlot1 = async (req, res) => {
+        try {
+                const fromTime = new Date(req.body.from);
+                const toTime = new Date(req.body.to);
+                const halfHour = 15 * 60 * 1000;
+                while (fromTime.getTime() < toTime.getTime()) {
+                        const slotEndTime = new Date(fromTime.getTime() + halfHour);
+                        let findSlot = await slot.findOne({ date: req.body.date, from: fromTime.toISOString(), to: slotEndTime.toISOString() });
+                        if (!findSlot) {
+                                const slot1 = new slot({
+                                        date: req.body.date,
+                                        from: fromTime.toISOString(),
+                                        to: slotEndTime.toISOString(),
+                                });
+                                await slot1.save();
+                                fromTime.setTime(slotEndTime.getTime());
+                        }
+                }
+                return res.status(200).json({ message: "Slots added successfully.", status: 200, data: {}, });
+        } catch (error) {
+                return res.status(500).json({ status: 500, message: "Internal server error ", data: error.message, });
+        }
+};
+exports.getSlot = async (req, res) => {
+        try {
+                const findCart = await Cart.findOne({ user: req.user._id });
+                if (!findCart) {
+                        return res.status(200).json({ success: false, msg: "Cart is empty", cart: {} });
+                }
+                let currentDate = new Date(req.query.date);
+                let totalTime = 0;
+                if (findCart.services.length > 0) {
+                        for (let i = 0; i < findCart.services.length; i++) {
+                                totalTime += findCart.services[i].totalMin;
+                        }
+                }
+                if (findCart.AddOnservicesSchema.length > 0) {
+                        for (let i = 0; i < findCart.AddOnservicesSchema.length; i++) {
+                                totalTime += findCart.AddOnservicesSchema[i].totalMin;
+                        }
+                }
+                const slots = [];
+                const categories = await slot.find({ date: currentDate.toISOString().split('T')[0], isBooked: false, slotBlocked: false });
+                if (categories.length > 0) {
+                        console.log(categories)
+                        for (let i = 0; i < categories.length; i++) {
+                                findCart.toTime = categories[i].from;
+                                let dateTimeObject = new Date(categories[i].from);
+                                let d = dateTimeObject.toISOString().split('T')[0];
+                                let hours = dateTimeObject.getUTCHours();
+                                let minutes = dateTimeObject.getUTCMinutes();
+                                const providedTimeInMinutes = hours * 60 + minutes;
+                                let fromTimeInMinutes = providedTimeInMinutes + totalTime;
+                                const fromTime = new Date(d);
+                                fromTime.setMinutes(fromTimeInMinutes);
+                                findCart.fromTime = fromTime;
+                                const desiredTime = "17:01:00.000+00:00";
+                                const findCartTime = findCart.fromTime.toISOString().split('T')[1];
+                                if (findCartTime < desiredTime) {
+                                        console.log(findCart.toTime, findCart.fromTime)
+                                        let findSlot1 = await slot.find({ to: { $lte: findCart.fromTime }, from: { $gte: findCart.toTime }, date: req.query.date });
+                                        if (findSlot1.length > 0) {
+                                                let allSlotsAvailable = true;
+                                                for (let k = 0; k < findSlot1.length; k++) {
+                                                        if (findSlot1[k].isBooked) {
+                                                                allSlotsAvailable = false;
+                                                                break;
+                                                        }
+                                                }
+                                                if (allSlotsAvailable) {
+                                                        const obj = {
+                                                                date: req.query.date,
+                                                                from: findCart.toTime,
+                                                                to: findCart.fromTime,
+                                                                isBooked: false,
+                                                                slotBlocked: false,
+                                                        };
+                                                        slots.push(obj);
+                                                }
+                                        }
+                                }
+                        }
+                }
+                if (slots.length > 0) {
+                        let x = [];
+                        const startingSlots = slots.filter(slot => {
+                                const startTime = new Date(slot.from).getUTCHours();
+                                return [10, 11, 12, 13, 14, 15, 16, 17].includes(startTime);
+                        });
+                        const selectedHours = new Set();
+                        for (let i = 0; i < startingSlots.length; i++) {
+                                const startTime = new Date(startingSlots[i].from).getUTCHours();
+                                if ([10, 11, 12, 13, 14, 15, 16, 17].includes(startTime) && !selectedHours.has(startTime)) {
+                                        x.push(startingSlots[i]);
+                                        selectedHours.add(startTime);
+                                }
+                        }
+                        if (startingSlots.length > 0) {
+                                return res.status(200).json({ message: "Starting Slots Found", status: 200, data: x });
+                        } else {
+                                return res.status(404).json({ message: "Starting Slots not Found", status: 404, data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ message: "Slots not Found", status: 404, data: {} });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Internal Server Error", status: 500, data: {} });
+        }
+};
+exports.getAvailableSlotOnwhichDate = async (req, res) => {
+        try {
+                const { year, month } = req.query;
+                if ((year == null || year == undefined) && (month == null || month == undefined)) {
+                        const currentDate = new Date();
+                        const currentYear = currentDate.getFullYear();
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const startDate = moment(`${currentYear}-${currentMonth}-01`).startOf('month');
+                        const endDate = moment(startDate).endOf('month');
+                        const slots = await slot.find({ date: { $gte: startDate, $lte: endDate } }).sort({ date: 1 });
+                        if (slots.length === 0) {
+                                return res.json({ allSlot: [] });
+                        }
+                        let uniqueDates = new Set();
+                        let allSlot = [];
+                        for (let i = 0; i < slots.length; i++) {
+                                if (!uniqueDates.has(slots[i].date.toString())) {
+                                        const categories = await slot.find({ date: slots[i].date, slotBlocked: false, isBooked: false }).count();
+                                        const allBooked = categories === 0 ? 'yes' : 'no';
+                                        let obj = {
+                                                date: slots[i].date,
+                                                allBooked: allBooked,
+                                        };
+                                        allSlot.push(obj);
+                                        uniqueDates.add(slots[i].date.toString());
+                                }
+                        }
+                        return res.json({ allSlot });
+                } else {
+                        const startDate = moment(`${year}-${month}-01`).startOf('month');
+                        const endDate = moment(startDate).endOf('month');
+                        const slots = await slot.find({ date: { $gte: startDate, $lte: endDate } }).sort({ date: 1 });
+                        if (slots.length === 0) {
+                                return res.json({ allSlot: [] });
+                        }
+                        let uniqueDates = new Set();
+                        let allSlot = [];
+                        for (let i = 0; i < slots.length; i++) {
+                                if (!uniqueDates.has(slots[i].date.toString())) {
+                                        const categories = await slot.find({ date: slots[i].date, slotBlocked: false, isBooked: false }).count();
+                                        const allBooked = categories === 0 ? 'yes' : 'no';
+                                        let obj = {
+                                                date: slots[i].date,
+                                                allBooked: allBooked,
+                                        };
+                                        allSlot.push(obj);
+                                        uniqueDates.add(slots[i].date.toString());
+                                }
+                        }
+                        return res.json({ allSlot });
+                }
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Internal Server Error' });
+        }
+};
+exports.getSlotForAdmin = async (req, res) => {
+        try {
+                const { fromDate, date, toDate, page, limit } = req.query;
+                let query = {};
+                const categories = await slot.find({});
+                if (date) {
+                        query.date = date;
+                }
+                if (fromDate && !toDate) {
+                        query.date = { $gte: fromDate };
+                }
+                if (!fromDate && toDate) {
+                        query.date = { $lte: toDate };
+                }
+                if (fromDate && toDate) {
+                        query.$and = [
+                                { date: { $gte: fromDate } },
+                                { date: { $lte: toDate } },
+                        ]
+                }
+                let options = {
+                        page: Number(page) || 1,
+                        limit: Number(limit) || categories.length,
+                        sort: { from: 1 },
+                };
+                let data = await slot.paginate(query, options);
+                return res.status(200).json({ status: 200, message: "Slot data found.", data: data });
+        } catch (err) {
+                return res.status(500).send({ msg: "internal server error ", error: err.message, });
+        }
+};
+exports.updateSlot = async (req, res) => {
+        const { id } = req.params;
+        const category = await slot.findById(id);
+        if (!category) {
+                return res.status(404).json({ message: "Slot Not Found", status: 404, data: {} });
+        }
+        category.date = req.body.date || category.date;
+        category.from = req.body.from || category.from;
+        category.to = req.body.to || category.to;
+        let update = await category.save();
+        return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeSlot = async (req, res) => {
+        const { id } = req.params;
+        const category = await slot.findById(id);
+        if (!category) {
+                return res.status(404).json({ message: "Slot Not Found", status: 404, data: {} });
+        } else {
+                await slot.findByIdAndDelete(category._id);
+                return res.status(200).json({ message: "Slot Deleted Successfully !" });
+        }
+};
+async function generateSlots(startDate, staffId, vendorId) {
+        try {
+                function getAmPm(date) {
+                        const hours = date.getUTCHours();
+                        return hours >= 12 && hours < 24 ? 'PM' : 'AM';
+                }
+                const intervalMilliseconds = 24 * 60 * 60 * 1000;
+                let currentDate = new Date(startDate);
+                currentDate.setUTCHours(10, 0, 0, 0);
+                const endDate = new Date(currentDate.getTime() + 1 * intervalMilliseconds);
+                const slots = [];
+                for (; currentDate.getTime() < endDate.getTime(); currentDate.setDate(currentDate.getDate() + 1)) {
+                        const startTime = new Date(currentDate.getTime());
+                        const endTime = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000);
+                        const halfHour = 15 * 60 * 1000;
+                        while (startTime.getTime() < endTime.getTime()) {
+                                const slotEndTime = new Date(startTime.getTime() + halfHour);
+                                const obj = {
+                                        date: currentDate.toISOString().split('T')[0],
+                                        from: startTime.toISOString(),
+                                        to: slotEndTime.toISOString(),
+                                        fromAmPm: getAmPm(startTime),
+                                        toAmPm: getAmPm(slotEndTime),
+                                        staffId: staffId,
+                                        vendorId: vendorId
+                                };
+                                console.log(obj);
+                                const findSlot = await slot.findOne(obj);
+                                if (!findSlot) {
+                                        const slot1 = new slot(obj);
+                                        await slot1.save();
+                                        slots.push(obj);
+                                }
+                                startTime.setTime(slotEndTime.getTime());
+                        }
+                }
+                return slots;
+        } catch (error) {
+                console.log("Slots error.", error);
+        }
+}
 
 
 

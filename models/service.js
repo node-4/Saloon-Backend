@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const mongoosePaginate = require("mongoose-paginate");
+const mongoosePaginate = require("mongoose-paginate-v2");
 const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 const schema = mongoose.Schema;
 var storeSchema = new schema({
@@ -25,7 +25,7 @@ var storeSchema = new schema({
         },
         useBy: {
                 type: String,
-                enum: ["Male", "Female","Both"]
+                enum: ["Male", "Female", "Both"]
         }
 }, { timestamps: true });
 storeSchema.plugin(mongoosePaginate);

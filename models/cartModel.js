@@ -106,7 +106,13 @@ const DocumentSchema = schema({
                 enum: ["home", "Other"],
         },
         Date: {
-                type: Date
+                type: Date,
+        },
+        fromTime: {
+                type: Date,
+        },
+        toTime: {
+                type: Date,
         },
         time: {
                 type: String

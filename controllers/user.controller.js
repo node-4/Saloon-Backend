@@ -1711,7 +1711,7 @@ exports.addToCart = async (req, res) => {
                         if (findCart) {
                                 console.log("===============================");
                                 if (findCart.services.length == 0) {
-                                        let services = [], Charged = [], paidAmount = 0, totalAmount = 0, additionalFee = 0;
+                                        let coupan = 0, wallet = 0, tipProvided = 0, services = [], Charged = [], paidAmount = 0, totalAmount = 0, additionalFee = 0;
                                         const findCharge = await Charges.find({});
                                         if (findCharge.length > 0) {
                                                 for (let i = 0; i < findCharge.length; i++) {

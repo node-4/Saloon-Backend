@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
-const mongoosePaginate = require('mongoose-paginate');
+const mongoosePaginate = require('mongoose-paginate-v2');
 const DocumentSchema = schema({
     cityName: {
         type: String
     },
-    countryCode:{
+    countryCode: {
         type: String
     },
-    stateCode:{
+    stateCode: {
         type: String
     },
     status: {

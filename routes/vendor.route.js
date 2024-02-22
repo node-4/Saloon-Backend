@@ -56,8 +56,12 @@ router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
 router.get('/getOrders', [authJwt.verifyToken], auth.getOrders);
 router.put("/updateServiceImages", [authJwt.verifyToken], upload.array('image'), auth.updateServiceImages);
 
-
-
+router.post("/Slot/addSlot", auth.createSlot);
+router.get("/Slot/allSlot", [authJwt.verifyToken], auth.getSlot);
+router.get("/Slot/getAvailableSlotOnwhichDate", auth.getAvailableSlotOnwhichDate);
+router.get("/Slot/getSlotForAdmin", auth.getSlotForAdmin);
+router.put("/Slot/updateSlot/:id", [authJwt.verifyToken], auth.updateSlot);
+router.delete("/Slot/deleteSlot/:id", [authJwt.verifyToken], auth.removeSlot);
 
 
 // router.post("/Store/addStore", [authJwt.verifyToken], auth.addStore);
