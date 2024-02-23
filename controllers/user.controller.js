@@ -22,7 +22,7 @@ const feedback = require('../models/feedback');
 const ticket = require('../models/ticket');
 const favouriteBooking = require('../models/favouriteBooking');
 const cityModel = require('../models/city');
-const cartModel = require("../models/cartModel");
+const slot = require('../models/slot');
 exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
@@ -1044,6 +1044,27 @@ exports.getCart = async (req, res) => {
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
+                                let totalTime = 0;
+                                if (findCart.fromTime != (null || undefined)) {
+                                        if (findCart.services.length > 0) {
+                                                for (let i = 0; i < findCart.services.length; i++) {
+                                                        totalTime = totalTime + findCart.services[i].totalMin;
+                                                }
+                                        }
+                                        var dateTimeString = findCart.fromTime;
+                                        var dateTimeObject = new Date(dateTimeString);
+                                        let d = dateTimeObject.toISOString().split('T')[0];
+                                        var hours1 = dateTimeObject.getUTCHours();
+                                        var minutes1 = dateTimeObject.getUTCMinutes();
+                                        const hours = parseInt(hours1);
+                                        const minutes = parseInt(minutes1);
+                                        const providedTimeInMinutes = hours * 60 + minutes + 30;
+                                        let toTimeInMinutes = providedTimeInMinutes + totalTime;
+                                        const toTime = new Date(d);
+                                        toTime.setMinutes(toTimeInMinutes);
+                                        findCart.toTime = toTime;
+                                        findCart.save();
+                                }
                                 return res.status(200).json({ message: "cart data found.", status: 200, data: findCart });
                         }
                 }
@@ -1067,9 +1088,23 @@ exports.addStafftoCart = async (req, res) => {
                                         if (staff) {
                                                 const d = new Date(req.body.date);
                                                 let text = d.toISOString();
-                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: text, time: req.body.time, staffId: staff._id } }, { new: true });
+                                                let totalTime = 0;
+                                                if (findCart.services.length > 0) {
+                                                        for (let i = 0; i < findCart.services.length; i++) {
+                                                                totalTime += findCart.services[i].totalMin;
+                                                        }
+                                                }
+                                                let x = `${req.body.date}T${req.body.time}:00.000Z`;
+                                                const timeArray = req.body.time.split(':');
+                                                const hours = parseInt(timeArray[0]);
+                                                const minutes = parseInt(timeArray[1]);
+                                                const providedTimeInMinutes = hours * 60 + minutes + 30;
+                                                let toTimeInMinutes = providedTimeInMinutes + totalTime;
+                                                const toTime = new Date(d);
+                                                toTime.setMinutes(toTimeInMinutes);
+                                                let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: text, fromTime: x, toTime: toTime, staffId: staff._id } }, { new: true });
                                                 if (update) {
-                                                        return res.status(200).send({ status: 200, message: "Cart found successfully.", data: update });
+                                                        return res.status(200).send({ status: 200, message: "Cart update successfully.", data: update });
                                                 }
                                         } else {
                                                 return res.status(404).send({ status: 404, message: "Staff id not found" });
@@ -1289,7 +1324,6 @@ exports.applyWallet = async (req, res) => {
                                                 userWallet = wallet - paidAmount;
                                                 wallet = paidAmount;
                                                 paidAmount = 0;
-
                                         } else {
                                                 paidAmount = paidAmount - wallet;
                                         }
@@ -1399,6 +1433,7 @@ exports.checkout = async (req, res) => {
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
+                                console.log(findCart)
                                 let orderId = await reffralCode()
                                 let obj = {
                                         orderId: orderId,
@@ -1421,13 +1456,14 @@ exports.checkout = async (req, res) => {
                                         appartment: findCart.appartment,
                                         landMark: findCart.landMark,
                                         houseType: findCart.houseType,
-                                        Date: findCart.Date,
-                                        time: findCart.time,
                                         services: findCart.services,
                                         totalAmount: findCart.totalAmount,
                                         additionalFee: findCart.additionalFee,
                                         paidAmount: findCart.paidAmount,
-                                        totalItem: findCart.totalItem
+                                        totalItem: findCart.totalItem,
+                                        Date: findCart.Date,
+                                        fromTime: findCart.fromTime,
+                                        toTime: findCart.toTime,
                                 }
                                 let SaveOrder = await orderModel.create(obj);
                                 if (SaveOrder) {
@@ -1446,6 +1482,18 @@ exports.placeOrder = async (req, res) => {
                 if (findUserOrder) {
                         if (req.body.paymentStatus == "paid") {
                                 let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", status: "confirmed", paymentStatus: "paid" } }, { new: true });
+                                if (update) {
+                                        const dateObject = new Date(update.Date);
+                                        const dateString = dateObject.toISOString().split('T')[0];
+                                        const newTime = "00:00:00.000+00:00";
+                                        const replacedDateString = `${dateString}T${newTime}`;
+                                        let findSlot = await slot.find({ to: { $lte: update.toTime }, from: { $gte: update.fromTime }, staffId: update.staffId, date: replacedDateString, isBooked: false });
+                                        if (findSlot.length > 0) {
+                                                const slotIds = findSlot.map(slot => slot._id);
+                                                const updateResult = await slot.updateMany({ _id: { $in: slotIds } }, { $set: { isBooked: true } });
+                                                console.log(`Slot with ID ${slotIds} is now booked.`);
+                                        }
+                                }
                                 return res.status(200).json({ message: "Payment success.", status: 200, data: update });
                         }
                         if (req.body.paymentStatus == "failed") {
@@ -1455,6 +1503,7 @@ exports.placeOrder = async (req, res) => {
                         return res.status(404).json({ message: "No data found", data: {} });
                 }
         } catch (error) {
+                console.log(error)
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
@@ -1741,6 +1790,8 @@ exports.addToCart = async (req, res) => {
                                                                 price: findService.price,
                                                                 quantity: 1,
                                                                 total: totalAmount,
+                                                                totalTime: findService.totalTime,
+                                                                totalMin: findService.totalMin,
                                                         }
                                                         services.push(obj)
                                                 }
@@ -1764,11 +1815,32 @@ exports.addToCart = async (req, res) => {
                                         }
                                         let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { services: services } }, { new: true });
                                         if (update) {
-                                                for (let j = 0; j < update.services.length; j++) {
-                                                        totalAmount = totalAmount + update.services[j].total
+                                                let totalTime = 0, totalAmount1 = 0;
+                                                if (update.fromTime != (null || undefined)) {
+                                                        if (update.services.length > 0) {
+                                                                for (let i = 0; i < update.services.length; i++) {
+                                                                        totalTime = totalTime + update.services[i].totalMin;
+                                                                }
+                                                        }
+                                                        var dateTimeString = update.fromTime;
+                                                        var dateTimeObject = new Date(dateTimeString);
+                                                        let d = dateTimeObject.toISOString().split('T')[0];
+                                                        var hours1 = dateTimeObject.getUTCHours();
+                                                        var minutes1 = dateTimeObject.getUTCMinutes();
+                                                        const hours = parseInt(hours1);
+                                                        const minutes = parseInt(minutes1);
+                                                        const providedTimeInMinutes = hours * 60 + minutes + 30;
+                                                        let toTimeInMinutes = providedTimeInMinutes + totalTime;
+                                                        let toTime = new Date(d);
+                                                        toTime.setMinutes(toTimeInMinutes);
+                                                        update.toTime = toTime;
+                                                        update.save();
                                                 }
-                                                paidAmount = totalAmount + additionalFee + tipProvided - wallet - coupan;
-                                                let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
+                                                for (let j = 0; j < update.services.length; j++) {
+                                                        totalAmount1 = totalAmount1 + update.services[j].total
+                                                }
+                                                paidAmount = totalAmount1 + additionalFee + tipProvided - wallet - coupan;
+                                                let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { Charges: Charged, totalAmount: totalAmount1, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
                                                 return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
                                         }
                                 }
@@ -1820,6 +1892,8 @@ exports.addToCart = async (req, res) => {
                                                                 price: findService.price,
                                                                 quantity: 1,
                                                                 total: totalAmount,
+                                                                totalTime: findService.totalTime,
+                                                                totalMin: findService.totalMin,
                                                         }
                                                         services.push(obj)
                                                 }
@@ -1842,7 +1916,7 @@ exports.addToCart = async (req, res) => {
                                         }
                                         let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { services: services } }, { new: true });
                                         if (update) {
-                                                let totalAmount1 = 0, paidAmount = 0;
+                                                let totalAmount1 = 0, paidAmount = 0, totalTime = 0;
                                                 for (let j = 0; j < update.services.length; j++) {
                                                         totalAmount1 = totalAmount1 + update.services[j].total
                                                 }
@@ -1850,10 +1924,29 @@ exports.addToCart = async (req, res) => {
                                                 if (wallet > paidAmount) {
                                                         wallet = paidAmount;
                                                         paidAmount = 0;
-
                                                 } else {
                                                         wallet = 0;
                                                         paidAmount = paidAmount - wallet;
+                                                }
+                                                if (update.fromTime != (null || undefined)) {
+                                                        if (update.services.length > 0) {
+                                                                for (let i = 0; i < update.services.length; i++) {
+                                                                        totalTime = totalTime + update.services[i].totalMin;
+                                                                }
+                                                        }
+                                                        var dateTimeString = update.fromTime;
+                                                        var dateTimeObject = new Date(dateTimeString);
+                                                        let d = dateTimeObject.toISOString().split('T')[0];
+                                                        var hours1 = dateTimeObject.getUTCHours();
+                                                        var minutes1 = dateTimeObject.getUTCMinutes();
+                                                        const hours = parseInt(hours1);
+                                                        const minutes = parseInt(minutes1);
+                                                        const providedTimeInMinutes = hours * 60 + minutes + 30;
+                                                        let toTimeInMinutes = providedTimeInMinutes + totalTime;
+                                                        let toTime = new Date(d);
+                                                        toTime.setMinutes(toTimeInMinutes);
+                                                        update.toTime = toTime;
+                                                        update.save();
                                                 }
                                                 let update1 = await Cart.findByIdAndUpdate({ _id: update._id }, { $set: { wallet: wallet, Charges: Charged, totalAmount: totalAmount1, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: update.services.length } }, { new: true });
                                                 return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: update1 })
@@ -1891,6 +1984,8 @@ exports.addToCart = async (req, res) => {
                                                         price: findService.price,
                                                         quantity: 1,
                                                         total: findService.price * 1,
+                                                        totalTime: findService.totalTime,
+                                                        totalMin: findService.totalMin,
                                                 };
                                                 vendorId = findService.vendorId
                                                 services.push(obj)
@@ -1916,6 +2011,64 @@ exports.addToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+
+// exports.addToCart = async (req, res) => {
+//         try {
+//                 const userData = await User.findOne({ _id: req.user._id });
+//                 if (!userData) {
+//                         return res.status(404).send({ status: 404, message: "User not found" });
+//                 }
+//                 let findCart = await Cart.findOne({ userId: userData._id });
+//                 let isNewCart = false;
+//                 if (!findCart) {
+//                         isNewCart = true;
+//                         findCart = new Cart({ userId: userData._id });
+//                 }
+//                 const services = [];
+//                 let totalAmount = 0;
+//                 const additionalFee = 0; // Assuming additionalFee calculation doesn't depend on data in the document
+//                 for (const serviceId of req.body.serviceArray) {
+//                         const findService = await service.findById(serviceId);
+//                         if (findService) {
+//                                 totalAmount += findService.price;
+//                                 services.push({
+//                                         serviceId: findService._id,
+//                                         price: findService.price,
+//                                         quantity: 1,
+//                                         total: findService.price,
+//                                         totalTime: findService.totalTime,
+//                                         totalMin: findService.totalMin,
+//                                 });
+//                         }
+//                 }
+//                 const coupon = findCart.coupanUsed ? (await Coupon.findById(findCart.coupanId)).discount : 0;
+//                 const wallet = findCart.walletUsed ? userData.wallet : 0;
+//                 const tipProvided = findCart.tip ? findCart.tipProvided : 0;
+//                 findCart.services = isNewCart ? services : [...findCart.services, ...services];
+//                 findCart.totalAmount += totalAmount;
+//                 findCart.additionalFee += additionalFee;
+//                 if (isNewCart) {
+//                         findCart.totalItem = services.length;
+//                 }
+//                 let updatedWallet = wallet;
+//                 let updatedPaidAmount = findCart.totalAmount + findCart.additionalFee + tipProvided - updatedWallet - coupon;
+//                 if (updatedWallet > updatedPaidAmount) {
+//                         updatedWallet -= updatedPaidAmount;
+//                         updatedPaidAmount = 0;
+//                 } else {
+//                         updatedPaidAmount -= updatedWallet;
+//                         updatedWallet = 0;
+//                 }
+//                 findCart.wallet = updatedWallet;
+//                 findCart.paidAmount = updatedPaidAmount;
+//                 const updatedCart = await findCart.save();
+//                 return res.status(200).json({ status: 200, message: "Service add to cart Successfully.", data: updatedCart });
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
+//         }
+// };
+
 //////////////////////////////////////////////////////////
 exports.updateQuantity = async (req, res) => {
         try {
@@ -1938,7 +2091,7 @@ exports.updateQuantity = async (req, res) => {
                                 if (findCart.walletUsed == true) { wallet = userData.wallet; } else { wallet = 0 }
                                 if (findCart.tip == true) { tipProvided = findCart.tipProvided } else { tipProvided = 0; }
                                 let on = [], off = [];
-                                const obj = findCart.services.find((user) => {
+                                findCart.services.find((user) => {
                                         if (((user.serviceId).toString() === req.params.id) == true) {
                                                 on.push(user)
                                         }
@@ -1957,6 +2110,8 @@ exports.updateQuantity = async (req, res) => {
                                                                 price: findService.price,
                                                                 quantity: req.body.quantity,
                                                                 total: totalAmount,
+                                                                totalTime: findService.totalTime,
+                                                                totalMin: findService.totalMin,
                                                         }
                                                         services.push(obj)
                                                 }
@@ -1973,6 +2128,8 @@ exports.updateQuantity = async (req, res) => {
                                                                 price: findService.price,
                                                                 quantity: off[k].quantity,
                                                                 total: totalAmount,
+                                                                totalTime: findService.totalTime,
+                                                                totalMin: findService.totalMin,
                                                         }
                                                         services.push(obj)
                                                 }

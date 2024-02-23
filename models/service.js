@@ -14,11 +14,11 @@ var storeSchema = new schema({
         name: {
                 type: String
         },
-        toHr: {
+        totalTime: {
                 type: String
         },
-        fromHr: {
-                type: String
+        totalMin: {
+                type: Number
         },
         price: {
                 type: Number

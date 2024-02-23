@@ -114,9 +114,6 @@ const DocumentSchema = schema({
         toTime: {
                 type: Date,
         },
-        time: {
-                type: String
-        },
         services: [{
                 serviceId: {
                         type: schema.Types.ObjectId,
@@ -132,6 +129,12 @@ const DocumentSchema = schema({
                 total: {
                         type: Number,
                         default: 0
+                },
+                totalTime: {
+                        type: String
+                },
+                totalMin: {
+                        type: Number
                 },
         }],
         totalAmount: {

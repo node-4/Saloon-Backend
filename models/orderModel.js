@@ -109,10 +109,13 @@ const DocumentSchema = schema({
                 enum: ["home", "Other"],
         },
         Date: {
-                type: Date
+                type: Date,
         },
-        time: {
-                type: String
+        fromTime: {
+                type: Date,
+        },
+        toTime: {
+                type: Date,
         },
         services: [{
                 serviceId: {
@@ -129,6 +132,12 @@ const DocumentSchema = schema({
                 total: {
                         type: Number,
                         default: 0
+                },
+                totalTime: {
+                        type: String
+                },
+                totalMin: {
+                        type: Number
                 },
         }],
         totalAmount: {

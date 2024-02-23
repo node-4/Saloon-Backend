@@ -521,6 +521,28 @@ exports.addService = async (req, res) => {
                         if (!findStore) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
+                                function convertTimeToMinutes(timeString) {
+                                        const regex = /(\d+)\s*hr(?:\s*(\d*)\s*min)?/;
+                                        const regex1 = /(\d+)\s*(?:min)?/;
+                                        const match = timeString.match(regex);
+                                        const match1 = timeString.match(regex1);
+                                        if (!match) {
+                                                if (!match1) {
+                                                        throw new Error("Invalid time format");
+                                                }
+                                        }
+                                        let hours, minutes;
+                                        if (match) {
+                                                hours = parseInt(match[1]) || 0;
+                                                minutes = parseInt(match[2]) || 0;
+                                        }
+                                        if (match1) {
+                                                hours = 0;
+                                                minutes = parseInt(match1[1]) || 0;
+                                        }
+                                        return hours * 60 + minutes;
+                                }
+                                req.body.totalMin = convertTimeToMinutes(req.body.totalTime)
                                 req.body.vendorId = vendorData._id;
                                 let saveStore = await service(req.body).save();
                                 if (saveStore) {
@@ -547,12 +569,40 @@ exports.editService = async (req, res) => {
                                                 return res.status(404).send({ status: 404, message: "Data not found" });
                                         }
                                 }
+                                function convertTimeToMinutes(timeString) {
+                                        const regex = /(\d+)\s*hr(?:\s*(\d*)\s*min)?/;
+                                        const regex1 = /(\d+)\s*(?:min)?/;
+                                        const match = timeString.match(regex);
+                                        const match1 = timeString.match(regex1);
+                                        if (!match) {
+                                                if (!match1) {
+                                                        throw new Error("Invalid time format");
+                                                }
+                                        }
+                                        let hours, minutes;
+                                        if (match) {
+                                                hours = parseInt(match[1]) || 0;
+                                                minutes = parseInt(match[2]) || 0;
+                                        }
+                                        if (match1) {
+                                                hours = 0;
+                                                minutes = parseInt(match1[1]) || 0;
+                                        }
+                                        return hours * 60 + minutes;
+                                }
+                                let totalMin, totalTime;
+                                if (req.body.totalTime != (null || undefined)) {
+                                        totalMin = convertTimeToMinutes(req.body.totalTime)
+                                } else {
+                                        totalTime = findService.totalTime;
+                                        totalMin = findService.totalMin;
+                                }
                                 let obj = {
                                         vendorId: vendorData._id || findService.vendorId,
                                         serviceCategoryId: req.body.serviceCategoryId || findService.serviceCategoryId,
                                         name: req.body.name || findService.name,
-                                        toHr: req.body.toHr || findService.toHr,
-                                        fromHr: req.body.fromHr || findService.fromHr,
+                                        totalMin: totalMin,
+                                        totalTime: totalTime,
                                         price: req.body.price || findService.price,
                                         useBy: req.body.useBy || findService.useBy,
                                 }
@@ -874,7 +924,6 @@ exports.createSlot = async (req, res) => {
                 return res.status(500).json({ status: 500, message: "Internal server error ", data: error.message, });
         }
 };
-
 exports.createSlot1 = async (req, res) => {
         try {
                 const fromTime = new Date(req.body.from);
