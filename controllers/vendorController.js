@@ -16,6 +16,8 @@ const orderModel = require('../models/orderModel');
 const orderRatingModel = require('../models/orderRatingModel');
 const moment = require('moment');
 const slot = require('../models/slot');
+const Leave = require('../models/leave');
+const vendorPayout = require('../models/vendorPayout');
 exports.registration = async (req, res) => {
         try {
                 const { phone } = req.body;
@@ -829,23 +831,41 @@ exports.getCompleteOrders = async (req, res) => {
 exports.getOrders = async (req, res) => {
         try {
                 let query = { vendorId: req.user._id }
-                const { orderId, fromDate, toDate, status } = req.query;
+                const { orderId, staffId, userId, fromCreatedAt, toCreatedAt, fromDate, toDate, status } = req.query;
                 if (orderId) {
                         query.orderId = orderId;
+                }
+                if (staffId) {
+                        query.staffId = staffId;
+                }
+                if (userId) {
+                        query.userId = userId;
                 }
                 if (status) {
                         query.serviceStatus = status;
                 }
+                if (fromCreatedAt && !toCreatedAt) {
+                        query.createdAt = { $gte: fromCreatedAt };
+                }
+                if (!fromCreatedAt && toCreatedAt) {
+                        query.createdAt = { $lte: toCreatedAt };
+                }
+                if (fromCreatedAt && toCreatedAt) {
+                        query.$and = [
+                                { createdAt: { $gte: fromCreatedAt } },
+                                { createdAt: { $lte: toCreatedAt } },
+                        ]
+                }
                 if (fromDate && !toDate) {
-                        query.createdAt = { $gte: fromDate };
+                        query.Dates = { $gte: fromDate };
                 }
                 if (!fromDate && toDate) {
-                        query.createdAt = { $lte: toDate };
+                        query.Dates = { $lte: toDate };
                 }
                 if (fromDate && toDate) {
                         query.$and = [
-                                { createdAt: { $gte: fromDate } },
-                                { createdAt: { $lte: toDate } },
+                                { Dates: { $gte: fromDate } },
+                                { Dates: { $lte: toDate } },
                         ]
                 }
                 const data = await orderModel.find(query);
@@ -901,16 +921,126 @@ const reffralCode = async () => {
         }
         return OTP;
 }
-
-
-
-
-
-
-
-
-
-
+exports.closeJob = async (req, res) => {
+        try {
+                const data = await orderModel.findById({ _id: req.params.id });
+                if (data) {
+                        let update = await orderModel.findByIdAndUpdate({ _id: req.params.id }, { $set: { productCost: req.body.productCost, serviceStatus: "Complete", paymentMode: req.body.paymentMode, comment: req.body.comment } }, { new: true });
+                        return res.status(200).json({ status: 200, message: "Order complete successfully.", data: update });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.createLeave = async (req, res) => {
+        try {
+                const user = req.user;
+                req.body.employeeId = user.id;
+                let saveStore = await Leave(req.body).save();
+                return res.status(201).json(saveStore);
+        } catch (error) {
+                return res.status(400).json({ error: error.message });
+        }
+};
+exports.getAllLeaveForVendor = async (req, res) => {
+        try {
+                const leaves = await Leave.find({}).populate('employeeId');
+                res.json({ leaves });
+        } catch (error) {
+                return res.status(500).json({ error: error.message });
+        }
+};
+exports.approveLeave = async (req, res) => {
+        try {
+                const leave = await Leave.findById(req.params.id);
+                if (!leave) {
+                        return res.status(404).json({ message: 'Leave not found' });
+                }
+                const updatedLeave = await Leave.findByIdAndUpdate({ _id: leave._id }, { status: 'approved' }, { new: true });
+                res.json({ status: 200, message: 'Approved leave successfully', data: updatedLeave });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to approve leave' });
+        }
+};
+exports.cancelLeave = async (req, res) => {
+        try {
+                const leave = await Leave.findById(req.params.id);
+                if (!leave) {
+                        return res.status(404).json({ message: 'Leave not found' });
+                }
+                const updatedLeave = await Leave.findByIdAndUpdate({ _id: leave._id }, { status: 'cancelled' }, { new: true });
+                res.json({ status: 200, message: 'Cancel Leave successfully', data: updatedLeave });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to cancel leave' });
+        }
+};
+exports.getAllLeaves = async (req, res) => {
+        try {
+                const user = req.user;
+                const leaves = await Leave.find({ employeeId: user.id });
+                res.json({ user: { name: user.fullName, email: user.email, mobile: user.phone }, leaves });
+        } catch (error) {
+                return res.status(500).json({ error: error.message });
+        }
+};
+exports.getLeaveById = async (req, res) => {
+        try {
+                const user = req.user;
+                const leave = await Leave.findById(req.params.id);
+                if (!leave) {
+                        return res.status(404).json({ message: 'Leave not found' });
+                }
+                res.json({ user: { name: user.fullName, email: user.email, mobile: user.phone }, leave });
+        } catch (error) {
+                return res.status(500).json({ error: error.message });
+        }
+};
+exports.myPassbookDashboard = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let penalty = 0, incentive = 0;
+                        const totalJob = await orderModel.find({ vendorId: req.user._id }).count()
+                        const CompleteData = await orderModel.find({ vendorId: req.user._id, serviceStatus: "Complete" }).count()
+                        let obj = {
+                                totalJob: totalJob,
+                                CompleteData: CompleteData,
+                                penalty: penalty,
+                                incentive: incentive,
+                        }
+                        res.json({ status: 200, message: 'Data found successfully.', data: obj });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.homeDashboard = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        const pendingData = await orderModel.find({ vendorId: req.user._id, serviceStatus: "Pending" }).count()
+                        const CompleteData = await orderModel.find({ vendorId: req.user._id, serviceStatus: "Complete" }).count()
+                        let obj = {
+                                pendingData: pendingData,
+                                CompleteData: CompleteData,
+                        }
+                        res.json({ status: 200, message: 'Data found successfully.', data: obj });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 exports.createSlot = async (req, res) => {
         try {
                 const staff = await User.findOne({ _id: req.body.staffId, userType: "STAFF" });
@@ -1143,6 +1273,69 @@ exports.removeSlot = async (req, res) => {
                 return res.status(200).json({ message: "Slot Deleted Successfully !" });
         }
 };
+exports.totalRevenue = async (req, res) => {
+        try {
+                const { fromDate, toDate } = req.query;
+                const query = { vendorId: req.user._id };
+                if (fromDate && toDate) {
+                        query.createdAt = { $gte: new Date(fromDate), $lte: new Date(toDate) };
+                }
+                let total = 0, orderIds = [];
+                const data = await orderModel.find(query);
+                if (data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                                total = total + data[i].totalPaidAmount
+                                orderIds.push(data[i]._id);
+                                console.log(orderIds);
+                        }
+                        return res.status(200).json({ data: data, total, fromDate, toDate, orderIds });
+                } else {
+                        return res.status(404).json({ success: false, data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                return res.status(400).json({ message: err.message });
+        }
+};
+exports.vendorPayoutPaid = async (req, res) => {
+        try {
+                const { vendorId, fromDate, toDate, nextPayout } = req.body;
+                const query = { vendorId: vendorId };
+                if (fromDate && toDate) {
+                        query.createdAt = { $gte: new Date(fromDate), $lte: new Date(toDate) };
+                }
+                const user = await User.findOne({ _id: vendorId, });
+                if (!user) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                }
+                let total = 0;
+                const data = await orderModel.find(query);
+                if (data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                                total = total + data[i].totalPaidAmount
+                        }
+                        let obj = {
+                                vendorId: vendorId,
+                                startDate: fromDate,
+                                endDate: toDate,
+                                amount: total
+                        }
+                        let saveStore = await vendorPayout(obj).save();
+                        if (saveStore) {
+                                let obj1 = {
+                                        nextPayout: nextPayout || user.nextPayout
+                                }
+                                let update = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj1 }, { new: true });
+                                return res.status(200).json({ data: saveStore });
+                        }
+                } else {
+                        return res.status(404).json({ success: false, data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                return res.status(400).json({ message: err.message });
+        }
+};
 async function generateSlots(startDate, staffId, vendorId) {
         try {
                 function getAmPm(date) {
@@ -1184,23 +1377,6 @@ async function generateSlots(startDate, staffId, vendorId) {
                 console.log("Slots error.", error);
         }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // exports.addStore = async (req, res) => {
 //         try {
 //                 let vendorData = await User.findOne({ _id: req.user._id });

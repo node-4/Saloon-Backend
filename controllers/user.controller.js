@@ -1281,7 +1281,7 @@ exports.applyWallet = async (req, res) => {
                                 if (findCart.services.length == 0) {
                                         return res.status(404).json({ status: 404, message: "First add service in your cart.", data: {} });
                                 } else {
-                                        let Charged = [], paidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, walletUsed, userWallet;
+                                        let Charged = [], paidAmount = 0, totalPaidAmount = 0, additionalFee = 0, coupan = 0, wallet = 0, walletUsed, userWallet;
                                         const findCharge = await Charges.find({});
                                         if (findCharge.length > 0) {
                                                 for (let i = 0; i < findCharge.length; i++) {
@@ -1320,14 +1320,23 @@ exports.applyWallet = async (req, res) => {
                                                 tipProvided = 0;
                                         }
                                         paidAmount = findCart.totalAmount + additionalFee + tipProvided - coupan;
-                                        if (wallet > paidAmount) {
-                                                userWallet = wallet - paidAmount;
-                                                wallet = paidAmount;
-                                                paidAmount = 0;
+                                        totalPaidAmount = findCart.totalAmount + additionalFee + tipProvided - coupan;
+                                        if (wallet > totalPaidAmount) {
+                                                userWallet = wallet - totalPaidAmount;
+                                                wallet = totalPaidAmount;
+                                                totalPaidAmount = 0;
                                         } else {
-                                                paidAmount = paidAmount - wallet;
+                                                totalPaidAmount = totalPaidAmount - wallet;
                                         }
-                                        let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Charges: Charged, tip: findCart.tip, tipProvided: tipProvided, walletUsed: walletUsed, coupanUsed: findCart.coupanUsed, freeServiceUsed: findCart.freeServiceUsed, wallet: wallet, coupan: coupan, freeService: findCart.freeService, totalAmount: findCart.totalAmount, additionalFee: additionalFee, paidAmount: paidAmount, totalItem: findCart.totalItem } }, { new: true });
+                                        let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, {
+                                                $set: {
+                                                        Charges: Charged, tip: findCart.tip, tipProvided: tipProvided, walletUsed: walletUsed, coupanUsed: findCart.coupanUsed,
+                                                        freeServiceUsed: findCart.freeServiceUsed, wallet: wallet, coupan: coupan, freeService: findCart.freeService, totalAmount: findCart.totalAmount, additionalFee: additionalFee,
+                                                        paidAmount: paidAmount,
+                                                        totalPaidAmount: totalPaidAmount,
+                                                        totalItem: findCart.totalItem
+                                                }
+                                        }, { new: true });
                                         if (update1) {
                                                 return res.status(200).json({ status: 200, message: "wallet apply on cart Successfully.", data: update1 })
                                         }
@@ -1460,6 +1469,7 @@ exports.checkout = async (req, res) => {
                                         totalAmount: findCart.totalAmount,
                                         additionalFee: findCart.additionalFee,
                                         paidAmount: findCart.paidAmount,
+                                        totalPaidAmount: findCart.totalPaidAmount,
                                         totalItem: findCart.totalItem,
                                         Date: findCart.Date,
                                         fromTime: findCart.fromTime,

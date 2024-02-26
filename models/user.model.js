@@ -194,6 +194,17 @@ var userSchema = new schema(
             type: mongoose.Schema.ObjectId,
             ref: "user",
         }],
+        orderVisit: {
+            type: Number,
+            default: 0,
+        },
+        totalVisit: {
+            type: Number,
+            default: 0,
+        },
+        nextPayout: {
+            type: Date,
+        },
     },
     { timestamps: true }
 );

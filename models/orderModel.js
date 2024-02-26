@@ -95,6 +95,9 @@ const DocumentSchema = schema({
         suggestion: {
                 type: String,
         },
+        comment: {
+                type: String,
+        },
         houseFlat: {
                 type: String,
         },
@@ -152,7 +155,14 @@ const DocumentSchema = schema({
                 type: Number,
                 default: 0
         },
+        totalPaidAmount: {
+                type: Number,
+                default: 0
+        },
         totalItem: {
+                type: Number
+        },
+        productCost: {
                 type: Number
         },
         orderStatus: {
@@ -162,7 +172,7 @@ const DocumentSchema = schema({
         },
         serviceStatus: {
                 type: String,
-                enum: ["Pending", "Complete"],
+                enum: ["Pending", "InProcess", "Complete"],
                 default: "Pending",
         },
         status: {
@@ -174,6 +184,14 @@ const DocumentSchema = schema({
                 type: String,
                 enum: ["Pending", "Paid", "Failed"],
                 default: "Pending"
+        },
+        paymentMode: {
+                type: String,
+                enum: ["prePaid", "postPaid"],
+        },
+        payOut: {
+                type: Boolean,
+                default: false
         },
 }, { timestamps: true })
 module.exports = mongoose.model("order", DocumentSchema);

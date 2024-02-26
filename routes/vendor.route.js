@@ -55,14 +55,23 @@ router.get('/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);
 router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
 router.get('/getOrders', [authJwt.verifyToken], auth.getOrders);
 router.put("/updateServiceImages", [authJwt.verifyToken], upload.array('image'), auth.updateServiceImages);
-
+router.put("/closeJob/:id", [authJwt.verifyToken], auth.closeJob);
+router.post('/leaves/add', [authJwt.verifyToken], auth.createLeave);
+router.get('/leaves/getAllLeaveForVendor', auth.getAllLeaveForVendor);
+router.get('/leaves', [authJwt.verifyToken], auth.getAllLeaves);
+router.get('/leaves/:id', [authJwt.verifyToken], auth.getLeaveById);
+router.put('/approve-leave/:id', [authJwt.verifyToken], auth.approveLeave);
+router.put('/cancel-leave/:id', [authJwt.verifyToken], auth.cancelLeave);
 router.post("/Slot/addSlot", auth.createSlot);
 router.get("/Slot/allSlot", [authJwt.verifyToken], auth.getSlot);
 router.get("/Slot/getAvailableSlotOnwhichDate", auth.getAvailableSlotOnwhichDate);
 router.get("/Slot/getSlotForAdmin", auth.getSlotForAdmin);
 router.put("/Slot/updateSlot/:id", [authJwt.verifyToken], auth.updateSlot);
 router.delete("/Slot/deleteSlot/:id", [authJwt.verifyToken], auth.removeSlot);
-
+router.get("/myPassbookDashboard", [authJwt.verifyToken], auth.myPassbookDashboard);
+router.get("/homeDashboard", [authJwt.verifyToken], auth.homeDashboard);
+router.get("/totalRevenue", [authJwt.verifyToken], auth.totalRevenue);
+router.post("/vendorPayoutPaid", [authJwt.verifyToken], auth.vendorPayoutPaid);
 
 // router.post("/Store/addStore", [authJwt.verifyToken], auth.addStore);
 // router.get("/listStore", [authJwt.verifyToken], auth.listStore);

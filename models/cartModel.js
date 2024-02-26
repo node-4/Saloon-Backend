@@ -149,6 +149,10 @@ const DocumentSchema = schema({
                 type: Number,
                 default: 0
         },
+        totalPaidAmount: {
+                type: Number,
+                default: 0
+        },
         totalItem: {
                 type: Number
         },
