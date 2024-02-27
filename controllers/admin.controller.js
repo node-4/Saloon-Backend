@@ -17,6 +17,7 @@ const feedback = require('../models/feedback');
 const ticket = require('../models/ticket');
 const state = require('../models/state');
 const cityModel = require('../models/city');
+const orderModel = require('../models/orderModel');
 const cityArea = require('../models/cityArea');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
@@ -81,6 +82,58 @@ exports.update = async (req, res) => {
         return res.status(500).send({
             message: "internal server error " + err.message,
         });
+    }
+};
+exports.getAllVendor = async (req, res) => {
+    try {
+        const user = await User.find({ userType: "VENDOR" });
+        if (user.length == 0) {
+            return res.status(404).send({ message: "not found" });
+        }
+        return res.status(200).send({ message: "Get user details.", data: user });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({
+            message: "internal server error " + err.message,
+        });
+    }
+};
+exports.getAllUser = async (req, res) => {
+    try {
+        const user = await User.find({ userType: "USER" });
+        if (user.length == 0) {
+            return res.status(404).send({ message: "not found" });
+        }
+        return res.status(200).send({ message: "Get user details.", data: user });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({
+            message: "internal server error " + err.message,
+        });
+    }
+};
+exports.viewUser = async (req, res) => {
+    try {
+        const data = await User.findById(req.params.id);
+        if (!data) {
+            return res.status(400).send({ msg: "not found" });
+        }
+        return res.status(200).send({ msg: "Data found successfully", data: data });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({ msg: "internal server error", error: err.message, });
+    }
+};
+exports.deleteUser = async (req, res) => {
+    try {
+        const data = await User.findByIdAndDelete(req.params.id);
+        if (!data) {
+            return res.status(400).send({ msg: "not found" });
+        }
+        return res.status(200).send({ msg: "deleted", data: data });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({ msg: "internal server error", error: err.message, });
     }
 };
 exports.createCategory = async (req, res) => {
@@ -793,5 +846,56 @@ exports.listCityArea = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.getOrders = async (req, res) => {
+    try {
+        let query = {}
+        const { orderId, staffId, userId, fromCreatedAt, toCreatedAt, fromDate, toDate, status } = req.query;
+        if (orderId) {
+            query.orderId = orderId;
+        }
+        if (staffId) {
+            query.staffId = staffId;
+        }
+        if (userId) {
+            query.userId = userId;
+        }
+        if (status) {
+            query.serviceStatus = status;
+        }
+        if (fromCreatedAt && !toCreatedAt) {
+            query.createdAt = { $gte: fromCreatedAt };
+        }
+        if (!fromCreatedAt && toCreatedAt) {
+            query.createdAt = { $lte: toCreatedAt };
+        }
+        if (fromCreatedAt && toCreatedAt) {
+            query.$and = [
+                { createdAt: { $gte: fromCreatedAt } },
+                { createdAt: { $lte: toCreatedAt } },
+            ]
+        }
+        if (fromDate && !toDate) {
+            query.Dates = { $gte: fromDate };
+        }
+        if (!fromDate && toDate) {
+            query.Dates = { $lte: toDate };
+        }
+        if (fromDate && toDate) {
+            query.$and = [
+                { Dates: { $gte: fromDate } },
+                { Dates: { $lte: toDate } },
+            ]
+        }
+        const data = await orderModel.find(query);
+        if (data.length > 0) {
+            return res.status(200).json({ message: "All orders", data: data });
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };

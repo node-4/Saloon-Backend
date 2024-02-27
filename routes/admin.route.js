@@ -8,6 +8,10 @@ const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUploa
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
 router.put("/update", [authJwt.verifyToken], auth.update);
+router.get("/getAllVendor", auth.getAllVendor);
+router.get("/getAllUser", auth.getAllUser);
+router.get("/viewUser/:id", auth.viewUser);
+router.delete("/deleteUser/:id", [authJwt.verifyToken], auth.deleteUser);
 router.post("/Category/addCategory", [authJwt.verifyToken], auth.createCategory);
 router.get("/Category/allCategory", auth.getCategories);
 router.put("/Category/updateCategory/:id", [authJwt.verifyToken], auth.updateCategory);
@@ -58,4 +62,5 @@ router.get("/city/listCity", auth.listCity);
 router.put('/city/activeBlockCity/:id', [authJwt.verifyToken], auth.activeBlockCity);
 router.post("/city/addcityArea", auth.addcityArea);
 router.get("/city/listCityArea/:city", auth.listCityArea);
+router.get('/getOrders', [authJwt.verifyToken], auth.getOrders);
 module.exports = router;
